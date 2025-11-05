@@ -765,7 +765,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Harsh**
 
-- GitHub: [@YOUR_USERNAME](https://github.com/harshangpate)
+- GitHub: [harshangpate](https://github.com/harshangpate)
 - Email: harshangpatelh@gmail.com
 
 ---
