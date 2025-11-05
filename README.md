@@ -609,23 +609,18 @@ After running the seed script, you can login with:
 
 ### Super Admin
 - **Email**: `superadmin@hospital.com`
-- **Password**: `SuperAdmin@123`
 
 ### Admin
 - **Email**: `admin@hospital.com`
-- **Password**: `Admin@123`
 
 ### Doctor
 - **Email**: `doctor@hospital.com`
-- **Password**: `Doctor@123`
 
 ### Other Roles
-- **Nurse**: `nurse@hospital.com` / `Nurse@123`
-- **Receptionist**: `receptionist@hospital.com` / `Receptionist@123`
-- **Lab Technician**: `lab@hospital.com` / `Lab@123`
-- **Pharmacist**: `pharmacist@hospital.com` / `Pharmacist@123`
-
-⚠️ **Important**: Change these passwords in production!
+- **Nurse**: `nurse@hospital.com`
+- **Receptionist**: `receptionist@hospital.com`
+- **Lab Technician**: `lab@hospital.com`
+- **Pharmacist**: `pharmacist@hospital.com`
 
 ---
 
@@ -771,7 +766,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 **Harsh**
 
 - GitHub: [@YOUR_USERNAME](https://github.com/YOUR_USERNAME)
-- Email: harsh@example.com
+- Email: harshangpatelh@gmail.com
 
 ---
 
