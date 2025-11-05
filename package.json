@@ -1,0 +1,32 @@
+{
+  "name": "hospital-crm",
+  "version": "1.0.0",
+  "description": "Comprehensive Hospital CRM System",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install && cd ../shared && npm install",
+    "build": "npm run build:shared && npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "build:shared": "cd shared && npm run build"
+  },
+  "keywords": [
+    "hospital",
+    "crm",
+    "healthcare",
+    "management"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
