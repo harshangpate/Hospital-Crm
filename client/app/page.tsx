@@ -4,6 +4,16 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import ParticleBackground from '@/components/ui/ParticleBackground';
+import ScrollReveal from '@/components/ui/ScrollReveal';
+import Card3D from '@/components/ui/Card3D';
+import { 
+  fadeInUp, 
+  staggerContainer, 
+  staggerItem, 
+  scaleInBounce,
+  float
+} from '@/lib/animations';
 import {
   Activity,
   Calendar,
@@ -22,6 +32,7 @@ import {
   BarChart3,
   Zap,
   Star,
+  Sparkles,
 } from 'lucide-react';
 
 const features = [
@@ -121,47 +132,77 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 lg:py-28">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative container mx-auto px-4 py-20 lg:py-28 overflow-hidden">
+        {/* Animated Particle Background */}
+        <ParticleBackground particleCount={30} />
+        
+        <div className="max-w-5xl mx-auto relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
             className="text-center"
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="mb-6"
+              variants={scaleInBounce}
+              className="mb-6 inline-block"
             >
-              <Badge className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-700 dark:text-blue-300 border-none">
-                <Zap className="w-4 h-4 mr-1 inline" />
-                530+ Features • Modern Design • Production Ready
+              <Badge className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-700 dark:text-blue-300 border-none shadow-lg">
+                <motion.div
+                  animate={{
+                    y: [0, -5, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  className="inline-flex items-center"
+                >
+                  <Zap className="w-4 h-4 mr-1" />
+                  530+ Features • Modern Design • Production Ready
+                </motion.div>
               </Badge>
             </motion.div>
             
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              variants={fadeInUp}
               className="text-5xl md:text-7xl font-bold mb-6"
             >
               <span className="text-gray-900 dark:text-white">Complete Hospital</span>
               <br />
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <motion.span
+                className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+                style={{
+                  backgroundSize: '200% auto',
+                }}
+              >
                 Management System
-              </span>
+              </motion.span>
             </motion.h1>
             
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              variants={fadeInUp}
               className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed"
             >
               A comprehensive, modern CRM system designed for multi-specialty hospitals
-              with <span className="font-semibold text-blue-600 dark:text-blue-400">530+ features</span> covering every aspect of hospital operations.
+              with{' '}
+              <motion.span
+                className="font-semibold text-blue-600 dark:text-blue-400"
+                whileHover={{ scale: 1.1 }}
+                transition={{ type: 'spring', stiffness: 400 }}
+              >
+                530+ features
+              </motion.span>{' '}
+              covering every aspect of hospital operations.
             </motion.p>
             
             <motion.div
@@ -212,49 +253,55 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="container mx-auto px-4 py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <Badge className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-purple-300 border-none mb-4">
-            <Star className="w-4 h-4 mr-1 inline" />
-            Core Features
-          </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Everything You Need
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Powerful features designed to streamline hospital operations and improve patient care.
-          </p>
-        </motion.div>
+        <ScrollReveal variant="fadeInUp">
+          <div className="text-center mb-16">
+            <Badge className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-purple-300 border-none mb-4">
+              <Star className="w-4 h-4 mr-1 inline" />
+              Core Features
+            </Badge>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Everything You Need
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Powerful features designed to streamline hospital operations and improve patient care.
+            </p>
+          </div>
+        </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto"
+        >
           {features.map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className="group relative p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-2xl transition-all duration-300"
+              variants={staggerItem}
+              className="group"
             >
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                <feature.icon className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {feature.title}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                {feature.description}
-              </p>
-              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+              <Card3D
+                className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-2xl transition-all duration-300"
+                intensity={10}
+              >
+                <motion.div
+                  className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 shadow-lg`}
+                  whileHover={{ rotate: 360, scale: 1.1 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <feature.icon className="w-7 h-7 text-white" />
+                </motion.div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {feature.description}
+                </p>
+              </Card3D>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* CTA Section */}
