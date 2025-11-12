@@ -472,7 +472,7 @@ export default function IntraOpRecord({ surgeryId }: { surgeryId: string }) {
             { label: 'Nursing Notes', field: 'nursingNotes' },
           ].map((item) => (
             <div key={item.field}>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <User className="w-4 h-4" />
                 {item.label}
               </label>
