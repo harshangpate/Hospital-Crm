@@ -26,6 +26,7 @@ import ScrollReveal from '@/components/ui/ScrollReveal';
 import PreOpChecklistComponent from '@/components/surgery/PreOpChecklist';
 import IntraOpRecordComponent from '@/components/surgery/IntraOpRecord';
 import PostOpRecordComponent from '@/components/surgery/PostOpRecord';
+import SurgeryBillingComponent from '@/components/surgery/SurgeryBilling';
 
 export default function SurgeryDetailsPage() {
   const params = useParams();
@@ -33,7 +34,7 @@ export default function SurgeryDetailsPage() {
   
   const [surgery, setSurgery] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'details' | 'pre-op' | 'intra-op' | 'post-op'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'pre-op' | 'intra-op' | 'post-op' | 'billing'>('details');
 
   useEffect(() => {
     if (surgeryId) {
@@ -149,6 +150,7 @@ export default function SurgeryDetailsPage() {
               { id: 'pre-op', label: 'Pre-Operative', icon: CheckCircle },
               { id: 'intra-op', label: 'Intra-Operative', icon: Activity },
               { id: 'post-op', label: 'Post-Operative', icon: User },
+              { id: 'billing', label: 'Billing', icon: Activity },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -324,6 +326,10 @@ export default function SurgeryDetailsPage() {
 
             {activeTab === 'post-op' && (
               <PostOpRecordComponent surgeryId={surgeryId} />
+            )}
+
+            {activeTab === 'billing' && (
+              <SurgeryBillingComponent surgeryId={surgeryId} surgeryDetails={surgery} />
             )}
           </div>
         </div>

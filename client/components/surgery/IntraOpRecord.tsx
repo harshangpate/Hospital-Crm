@@ -81,7 +81,7 @@ export default function IntraOpRecord({ surgeryId }: { surgeryId: string }) {
     vitals: [],
   });
 
-  const handleFieldChange = (field: keyof IntraOpData, value: any) => {
+  const handleFieldChange = (field: keyof IntraOpData, value: string | boolean) => {
     setRecord((prev) => (prev ? { ...prev, [field]: value } : null));
   };
 
