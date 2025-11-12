@@ -82,6 +82,7 @@ model Patient {
   user                     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   prescriptions            Prescription[]
   vitalSigns               VitalSign[]
+  surgeries                Surgery[]
 
   @@index([userId])
   @@index([patientId])
@@ -113,6 +114,7 @@ model Doctor {
   user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   medicalRecords  MedicalRecord[]
   prescriptions   Prescription[]
+  surgeriesAsPrimarySurgeon Surgery[]    @relation("PrimarySurgeon")
 
   @@index([doctorId])
   @@index([userId])
@@ -972,4 +974,454 @@ enum AdmissionType {
   EMERGENCY
   PLANNED
   TRANSFER
+}
+
+enum OTStatus {
+  AVAILABLE
+  OCCUPIED
+  UNDER_MAINTENANCE
+  CLEANING
+  RESERVED
+}
+
+enum OTType {
+  GENERAL
+  CARDIAC
+  ORTHOPEDIC
+  NEUROSURGERY
+  GYNECOLOGY
+  PEDIATRIC
+  TRAUMA
+  OPHTHALMIC
+  ENT
+  ENDOSCOPY
+}
+
+enum SurgeryType {
+  ELECTIVE
+  EMERGENCY
+  DAY_CARE
+}
+
+enum SurgeryStatus {
+  SCHEDULED
+  PRE_OP
+  IN_PROGRESS
+  POST_OP
+  COMPLETED
+  CANCELLED
+  POSTPONED
+}
+
+enum SurgeryPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum AnesthesiaType {
+  GENERAL
+  SPINAL
+  EPIDURAL
+  LOCAL
+  REGIONAL
+  SEDATION
+}
+
+enum TeamMemberRole {
+  PRIMARY_SURGEON
+  ASSISTANT_SURGEON
+  ANESTHESIOLOGIST
+  SCRUB_NURSE
+  CIRCULATING_NURSE
+  TECHNICIAN
+  ANESTHESIA_TECHNICIAN
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  IN_USE
+  UNDER_MAINTENANCE
+  DAMAGED
+  STERILIZING
+  RETIRED
+}
+
+enum ChecklistItemStatus {
+  PENDING
+  COMPLETED
+  NOT_APPLICABLE
+  FAILED
+}
+
+enum PostOpCondition {
+  STABLE
+  CRITICAL
+  FAIR
+  GOOD
+  EXCELLENT
+}
+
+// ==================== SURGERY & OT MODELS ====================
+
+model OperationTheater {
+  id                String                @id @default(uuid())
+  name              String                @unique
+  otNumber          String                @unique
+  type              OTType
+  floor             Int?
+  building          String?
+  capacity          Int                   @default(1)
+  status            OTStatus              @default(AVAILABLE)
+  isActive          Boolean               @default(true)
+  hasLaminairFlow   Boolean               @default(false)
+  hasVideoSystem    Boolean               @default(false)
+  equipment         String[]              // Array of equipment names
+  specialFeatures   String?
+  lastMaintenance   DateTime?
+  nextMaintenance   DateTime?
+  sterilityLevel    String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  surgeries         Surgery[]
+  equipmentList     OTEquipment[]
+  maintenanceLogs   OTMaintenanceLog[]
+
+  @@index([status])
+  @@index([type])
+  @@map("operation_theaters")
+}
+
+model Surgery {
+  id                      String                @id @default(uuid())
+  surgeryNumber           String                @unique
+  patientId               String
+  primarySurgeonId        String
+  operationTheaterId      String
+  surgeryType             SurgeryType
+  surgeryName             String
+  description             String?
+  diagnosis               String?
+  scheduledDate           DateTime
+  scheduledStartTime      DateTime
+  scheduledEndTime        DateTime
+  actualStartTime         DateTime?
+  actualEndTime           DateTime?
+  estimatedDuration       Int                   // in minutes
+  actualDuration          Int?                  // in minutes
+  priority                SurgeryPriority       @default(MEDIUM)
+  status                  SurgeryStatus         @default(SCHEDULED)
+  anesthesiaType          AnesthesiaType?
+  bloodRequirement        String?               // e.g., "2 units O+"
+  specialEquipment        String?
+  specialInstructions     String?
+  consentObtained         Boolean               @default(false)
+  consentFormUrl          String?
+  insuranceApprovalNumber String?
+  estimatedCost           Float?
+  actualCost              Float?
+  complications           String?
+  findings                String?
+  procedureNotes          String?
+  specimenCollected       String?
+  implantUsed             String?
+  implantBatchNumber      String?
+  bloodLoss               String?
+  fluidsGiven             String?
+  postOpInstructions      String?
+  followUpDate            DateTime?
+  icdCode                 String?               // ICD-10 procedure code
+  cptCode                 String?               // CPT code for billing
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  createdBy               String?
+  cancelledReason         String?
+  cancelledAt             DateTime?
+  patient                 Patient               @relation(fields: [patientId], references: [id])
+  primarySurgeon          Doctor                @relation("PrimarySurgeon", fields: [primarySurgeonId], references: [id])
+  operationTheater        OperationTheater      @relation(fields: [operationTheaterId], references: [id])
+  surgicalTeam            SurgicalTeamMember[]
+  preOpChecklist          PreOpChecklist?
+  intraOpRecord           IntraOpRecord?
+  postOpRecord            PostOpRecord?
+  billingItems            SurgeryBillingItem[]
+
+  @@index([patientId])
+  @@index([primarySurgeonId])
+  @@index([operationTheaterId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@index([surgeryType])
+  @@map("surgeries")
+}
+
+model SurgicalTeamMember {
+  id              String            @id @default(uuid())
+  surgeryId       String
+  userId          String?           // Can be doctor, staff, or nurse
+  role            TeamMemberRole
+  name            String
+  specialization  String?
+  contactNumber   String?
+  assignedAt      DateTime          @default(now())
+  createdAt       DateTime          @default(now())
+  surgery         Surgery           @relation(fields: [surgeryId], references: [id], onDelete: Cascade)
+
+  @@index([surgeryId])
+  @@index([userId])
+  @@map("surgical_team_members")
+}
+
+model PreOpChecklist {
+  id                      String                  @id @default(uuid())
+  surgeryId               String                  @unique
+  // Patient Preparation
+  consentSigned           ChecklistItemStatus     @default(PENDING)
+  consentSignedAt         DateTime?
+  consentSignedBy         String?
+  identityVerified        ChecklistItemStatus     @default(PENDING)
+  allergiesVerified       ChecklistItemStatus     @default(PENDING)
+  fastingStatus           ChecklistItemStatus     @default(PENDING)
+  npoSince                DateTime?
+  // Lab & Investigations
+  bloodTestDone           ChecklistItemStatus     @default(PENDING)
+  bloodTestResults        String?
+  xrayDone                ChecklistItemStatus     @default(PENDING)
+  ecgDone                 ChecklistItemStatus     @default(PENDING)
+  otherTestsDone          ChecklistItemStatus     @default(PENDING)
+  otherTestsDetails       String?
+  // Medications
+  preMedicationGiven      ChecklistItemStatus     @default(PENDING)
+  preMedicationDetails    String?
+  currentMedsStopped      ChecklistItemStatus     @default(PENDING)
+  anticoagulantsStatus    String?
+  // Equipment & Supplies
+  otPrepared              ChecklistItemStatus     @default(PENDING)
+  instrumentsSterilized   ChecklistItemStatus     @default(PENDING)
+  equipmentChecked        ChecklistItemStatus     @default(PENDING)
+  bloodArranged           ChecklistItemStatus     @default(PENDING)
+  bloodUnitsAvailable     String?
+  implantsAvailable       ChecklistItemStatus     @default(PENDING)
+  implantDetails          String?
+  // Anesthesia
+  anesthesiaAssessment    ChecklistItemStatus     @default(PENDING)
+  anesthesiaRisk          String?
+  airwayAssessment        String?
+  // Final Checks
+  siteMarked              ChecklistItemStatus     @default(PENDING)
+  jewelryRemoved          ChecklistItemStatus     @default(PENDING)
+  dentalProstheticsRemoved ChecklistItemStatus    @default(PENDING)
+  ivLineSecured           ChecklistItemStatus     @default(PENDING)
+  catheterInserted        ChecklistItemStatus     @default(PENDING)
+  // WHO Surgical Safety Checklist
+  whoTimeOutCompleted     ChecklistItemStatus     @default(PENDING)
+  whoTimeOutCompletedAt   DateTime?
+  teamIntroductionDone    Boolean                 @default(false)
+  // Completion
+  completedBy             String?
+  completedAt             DateTime?
+  remarks                 String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  surgery                 Surgery                 @relation(fields: [surgeryId], references: [id], onDelete: Cascade)
+
+  @@index([surgeryId])
+  @@map("pre_op_checklists")
+}
+
+model IntraOpRecord {
+  id                      String          @id @default(uuid())
+  surgeryId               String          @unique
+  // Timing
+  patientInOTAt           DateTime?
+  anesthesiaStartAt       DateTime?
+  incisionAt              DateTime?
+  procedureStartAt        DateTime?
+  procedureEndAt          DateTime?
+  closureAt               DateTime?
+  patientOutOTAt          DateTime?
+  // Vitals (stored as JSON for multiple readings)
+  vitalSigns              Json?           // [{time, hr, bp, spo2, temp, rr}]
+  // Anesthesia Details
+  anesthesiaType          String?
+  anesthesiaDrugsUsed     String?
+  anesthesiaComplications String?
+  // Fluids & Blood
+  ivFluidsGiven           String?
+  bloodTransfused         String?
+  bloodLossEstimate       String?
+  urineOutput             String?
+  // Procedure Details
+  position                String?
+  surgicalApproach        String?
+  findings                String?
+  procedurePerformed      String?
+  tissueRemoved           String?
+  specimenSent            String?
+  drainsInserted          String?
+  // Implants & Materials
+  sutureMaterialUsed      String?
+  implantUsed             String?
+  implantBatchNumber      String?
+  implantExpiryDate       DateTime?
+  // Complications
+  complications           String?
+  additionalProcedures    String?
+  // Counts
+  swabCountCorrect        Boolean?
+  instrumentCountCorrect  Boolean?
+  needleCountCorrect      Boolean?
+  // Team Notes
+  surgeonNotes            String?
+  anesthesiaNotes         String?
+  nursingNotes            String?
+  // Documentation
+  imagesRecorded          Boolean         @default(false)
+  videoRecorded           Boolean         @default(false)
+  recordedBy              String?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  surgery                 Surgery         @relation(fields: [surgeryId], references: [id], onDelete: Cascade)
+
+  @@index([surgeryId])
+  @@map("intra_op_records")
+}
+
+model PostOpRecord {
+  id                      String            @id @default(uuid())
+  surgeryId               String            @unique
+  // Transfer Details
+  transferredTo           String?           // Recovery/ICU/Ward
+  transferredAt           DateTime?
+  // Immediate Post-Op
+  consciousness           String?
+  airwayStatus            String?
+  breathingStatus         String?
+  circulation             String?
+  painScore               Int?              // 0-10 scale
+  nauseaVomiting          Boolean           @default(false)
+  // Vitals on Arrival
+  initialVitals           Json?             // {hr, bp, spo2, temp, rr}
+  // Monitoring
+  vitalSignsFrequency     String?           // e.g., "Every 15 mins"
+  oxygenRequirement       String?
+  ivFluidsOrdered         String?
+  // Drains & Catheters
+  drainOutput             String?
+  catheterOutput          String?
+  // Medications
+  painManagement          String?
+  antibioticsPrescribed   String?
+  otherMedications        String?
+  // Complications
+  complications           String?
+  interventionsRequired   String?
+  // Discharge from Recovery
+  dischargeFromRecoveryAt DateTime?
+  dischargeCondition      PostOpCondition?
+  dischargedTo            String?           // Ward/ICU/Home
+  // Follow-up
+  followUpInstructions    String?
+  followUpDate            DateTime?
+  dietInstructions        String?
+  activityRestrictions    String?
+  woundCareInstructions   String?
+  warningSignsExplained   Boolean           @default(false)
+  // Prescriptions
+  dischargeMedications    String?
+  // Documentation
+  dischargeNotes          String?
+  recordedBy              String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  surgery                 Surgery           @relation(fields: [surgeryId], references: [id], onDelete: Cascade)
+
+  @@index([surgeryId])
+  @@map("post_op_records")
+}
+
+model OTEquipment {
+  id                  String            @id @default(uuid())
+  operationTheaterId  String?
+  name                String
+  equipmentCode       String            @unique
+  type                String
+  manufacturer        String?
+  model               String?
+  serialNumber        String?
+  purchaseDate        DateTime?
+  warrantyExpiry      DateTime?
+  lastCalibration     DateTime?
+  nextCalibration     DateTime?
+  status              EquipmentStatus   @default(AVAILABLE)
+  location            String?
+  maintenanceDue      DateTime?
+  usageCount          Int               @default(0)
+  isPortable          Boolean           @default(false)
+  remarks             String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  operationTheater    OperationTheater? @relation(fields: [operationTheaterId], references: [id])
+  maintenanceLogs     EquipmentMaintenanceLog[]
+
+  @@index([operationTheaterId])
+  @@index([status])
+  @@index([equipmentCode])
+  @@map("ot_equipment")
+}
+
+model EquipmentMaintenanceLog {
+  id                String        @id @default(uuid())
+  equipmentId       String
+  maintenanceType   String        // Calibration, Repair, Inspection
+  description       String
+  performedBy       String
+  performedAt       DateTime
+  nextMaintenanceAt DateTime?
+  cost              Float?
+  vendor            String?
+  remarks           String?
+  createdAt         DateTime      @default(now())
+  equipment         OTEquipment   @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@index([equipmentId])
+  @@map("equipment_maintenance_logs")
+}
+
+model OTMaintenanceLog {
+  id                  String            @id @default(uuid())
+  operationTheaterId  String
+  maintenanceType     String            // Cleaning, Sterilization, Repair
+  description         String
+  performedBy         String
+  startedAt           DateTime
+  completedAt         DateTime?
+  cost                Float?
+  vendor              String?
+  remarks             String?
+  createdAt           DateTime          @default(now())
+  operationTheater    OperationTheater  @relation(fields: [operationTheaterId], references: [id], onDelete: Cascade)
+
+  @@index([operationTheaterId])
+  @@map("ot_maintenance_logs")
+}
+
+model SurgeryBillingItem {
+  id            String    @id @default(uuid())
+  surgeryId     String
+  itemName      String
+  itemType      String    // OT_CHARGES, SURGEON_FEE, ANESTHESIA_FEE, EQUIPMENT, CONSUMABLE, IMPLANT
+  quantity      Int       @default(1)
+  unitPrice     Float
+  totalPrice    Float
+  discount      Float     @default(0)
+  tax           Float     @default(0)
+  netAmount     Float
+  remarks       String?
+  createdAt     DateTime  @default(now())
+  surgery       Surgery   @relation(fields: [surgeryId], references: [id], onDelete: Cascade)
+
+  @@index([surgeryId])
+  @@map("surgery_billing_items")
 }
