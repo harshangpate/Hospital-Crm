@@ -21,6 +21,9 @@ import billingRoutes from './routes/billing.routes';
 import testCatalogRoutes from './routes/testCatalog.routes';
 import securityRoutes from './routes/security.routes';
 import notificationRoutes from './routes/notification.routes';
+import surgeryRoutes from './routes/surgery.routes';
+import operationTheaterRoutes from './routes/operationTheater.routes';
+import surgeryRecordsRoutes from './routes/surgeryRecords.routes';
 import { startAppointmentReminderCron } from './cron/appointmentReminders';
 import { startDailyBedChargesCron } from './cron/dailyBedCharges';
 
@@ -124,6 +127,9 @@ app.use('/api/v1/ipd', bedRoutes);
 app.use('/api/v1/billing', billingRoutes);
 app.use('/api/v1/security', securityRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/surgeries', surgeryRoutes);
+app.use('/api/v1/operation-theaters', operationTheaterRoutes);
+app.use('/api/v1/surgery-records', surgeryRecordsRoutes);
 // app.use('/api/v1/patients', patientRoutes);
 // ... more routes
 
