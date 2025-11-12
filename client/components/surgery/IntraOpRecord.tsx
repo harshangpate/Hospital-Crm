@@ -104,7 +104,7 @@ export default function IntraOpRecord({ surgeryId }: { surgeryId: string }) {
     );
   };
 
-  const updateVitalSign = (index: number, field: keyof VitalSign, value: any) => {
+  const updateVitalSign = (index: number, field: keyof VitalSign, value: string | number) => {
     setRecord((prev) => {
       if (!prev) return null;
       const newVitals = [...prev.vitals];
@@ -214,7 +214,7 @@ export default function IntraOpRecord({ surgeryId }: { surgeryId: string }) {
         </div>
 
         {/* Vitals Summary */}
-        {record?.vitals.length > 0 && (
+        {record?.vitals && record.vitals.length > 0 && (
           <div className="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {record.vitals.length} vital sign readings recorded
