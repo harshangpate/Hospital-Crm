@@ -47,6 +47,7 @@
 - ✅ **Comprehensive**: 12+ modules covering all hospital operations
 - ✅ **Type-Safe**: Full TypeScript implementation
 - ✅ **Well-Documented**: Extensive documentation and API specs
+- ✅ **Recently Updated**: Complete Surgery & OT Module with advanced features (Nov 2025)
 
 ---
 
@@ -127,6 +128,20 @@
 - Result management with image uploads
 - PACS integration ready
 - Radiologist assignment
+
+### 🏥 **Surgery & Operation Theater Module** ⭐ NEW
+- **OT Management**: 8 operation theaters with real-time status tracking
+- **Surgery Scheduling**: Comprehensive surgery planning with team assignment
+- **Pre-Operative Checklist**: 40+ standardized pre-op checks
+- **Intra-Operative Records**: Real-time surgical procedure documentation
+- **Post-Operative Care**: Recovery tracking with 25+ monitoring parameters
+- **OT Equipment Management**: Track 100+ surgical instruments and equipment
+- **Maintenance Logs**: Equipment and OT maintenance scheduling
+- **Surgery Billing**: Itemized billing with 14 categories and auto-calculation
+- **Analytics Dashboard**: OT utilization, clinical metrics, and financial performance
+- **Surgical Team Management**: Assign surgeons, anesthesiologists, nurses, and technicians
+- **30+ API Endpoints**: Complete RESTful API for surgery operations
+- **Documentation**: [Surgery Module Guide](./SURGERY_MODULE_README.md) | [Quick Start](./QUICK_START_GUIDE.md)
 
 ### 📋 **Medical Records (EHR)**
 - Electronic health records with version control
@@ -250,9 +265,10 @@
 ┌────────────────────────┴────────────────────────────────────┐
 │                PostgreSQL Database                           │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  Tables: User, Patient, Doctor, Appointment,        │   │
-│  │  MedicalRecord, Prescription, LabTest, Invoice,     │   │
-│  │  Medication, Ward, Bed, Admission, Notification     │   │
+│  │  Tables: 40+ Models including User, Patient,        │   │
+│  │  Doctor, Appointment, MedicalRecord, Surgery,       │   │
+│  │  OperationTheater, LabTest, Invoice, Ward, Bed,     │   │
+│  │  Prescription, Medication, Notification, etc.       │   │
 │  └─────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────┘
 ```
