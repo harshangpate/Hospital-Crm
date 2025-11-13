@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -31,6 +31,25 @@ export default function LoginPage() {
   const [requires2FA, setRequires2FA] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering particles on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Generate particles only on client side with stable values
+  const particles = useMemo(() => {
+    if (!isMounted) return [];
+    
+    return Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: 3 + Math.random() * 2,
+      delay: Math.random() * 2,
+    }));
+  }, [isMounted]);
 
   const {
     register,
@@ -132,23 +151,23 @@ export default function LoginPage() {
           }}
         />
         
-        {/* Floating particles */}
-        {[...Array(20)].map((_, i) => (
+        {/* Floating particles - only render on client */}
+        {isMounted && particles.map((particle) => (
           <motion.div
-            key={i}
+            key={particle.id}
             className="absolute w-2 h-2 bg-blue-400/30 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
             }}
             animate={{
               y: [0, -30, 0],
               opacity: [0.2, 0.5, 0.2],
             }}
             transition={{
-              duration: 3 + Math.random() * 2,
+              duration: particle.duration,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: particle.delay,
             }}
           />
         ))}

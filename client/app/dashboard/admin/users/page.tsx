@@ -247,23 +247,23 @@ export default function UserManagementPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-200">
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <tr className="bg-gradient-to-r from-gray-700 to-gray-800 border-b-2 border-gray-600">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider">
                           User
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider">
                           Role
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider">
                           Contact
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider">
                           Joined
                         </th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-200 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
@@ -335,12 +335,12 @@ export default function UserManagementPage() {
                             })}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div className="flex items-center justify-end gap-2">
                               <motion.button
                                 whileHover={{ scale: 1.1, rotate: 5 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => router.push(`/dashboard/admin/users/${user.id}/edit`)}
-                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors shadow-sm"
+                                className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors shadow-sm border border-blue-200 hover:border-blue-300"
                                 title="Edit User"
                               >
                                 <Edit className="w-4 h-4" />
@@ -349,7 +349,7 @@ export default function UserManagementPage() {
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleToggleStatus(user.id)}
-                                className={`p-2 ${user.isActive ? 'text-orange-600 hover:bg-orange-100' : 'text-green-600 hover:bg-green-100'} rounded-lg transition-colors shadow-sm`}
+                                className={`p-2 ${user.isActive ? 'text-orange-600 hover:bg-orange-100 border-orange-200 hover:border-orange-300' : 'text-green-600 hover:bg-green-100 border-green-200 hover:border-green-300'} rounded-lg transition-colors shadow-sm border`}
                                 title={user.isActive ? 'Deactivate' : 'Activate'}
                               >
                                 {user.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
@@ -358,7 +358,7 @@ export default function UserManagementPage() {
                                 whileHover={{ scale: 1.1, rotate: -5 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
-                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors shadow-sm"
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors shadow-sm border border-red-200 hover:border-red-300"
                                 title="Delete User"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -372,8 +372,8 @@ export default function UserManagementPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200 flex items-center justify-between">
-                  <div className="text-sm text-gray-700">
+                <div className="px-6 py-4 bg-gradient-to-r from-gray-800 to-gray-900 border-t border-gray-700 flex items-center justify-between">
+                  <div className="text-sm text-gray-200">
                     Showing <span className="font-medium">{users.length}</span> of{' '}
                     <span className="font-medium">{totalCount}</span> results
                   </div>
@@ -383,11 +383,11 @@ export default function UserManagementPage() {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="px-4 py-2 text-sm text-gray-200 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-600 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       Previous
                     </motion.button>
-                    <span className="px-4 py-2 text-sm font-medium text-gray-700">
+                    <span className="px-4 py-2 text-sm font-medium text-gray-200">
                       Page {currentPage} of {totalPages}
                     </span>
                     <motion.button
@@ -395,7 +395,7 @@ export default function UserManagementPage() {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-white hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="px-4 py-2 text-sm text-gray-200 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-600 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       Next
                     </motion.button>

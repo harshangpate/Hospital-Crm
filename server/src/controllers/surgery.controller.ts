@@ -64,7 +64,6 @@ export const getAllSurgeries = async (req: Request, res: Response) => {
                   firstName: true,
                   lastName: true,
                   email: true,
-                  specialization: false,
                 },
               },
             },

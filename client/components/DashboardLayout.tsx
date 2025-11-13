@@ -69,13 +69,13 @@ const menuItems: MenuItem[] = [
     icon: Home,
     label: 'Dashboard',
     href: '/dashboard',
-    roles: ['PATIENT', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'LAB_TECHNICIAN', 'PHARMACIST', 'ADMIN'],
+    roles: ['PATIENT', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'LAB_TECHNICIAN', 'PHARMACIST', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: Calendar,
     label: 'Appointments',
     href: '/dashboard/appointments',
-    roles: ['PATIENT', 'DOCTOR', 'RECEPTIONIST', 'ADMIN'],
+    roles: ['PATIENT', 'DOCTOR', 'RECEPTIONIST', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: ClipboardList,
@@ -103,25 +103,25 @@ const menuItems: MenuItem[] = [
     icon: Users,
     label: 'Patients',
     href: '/dashboard/patients',
-    roles: ['DOCTOR', 'NURSE', 'RECEPTIONIST', 'ADMIN'],
+    roles: ['DOCTOR', 'NURSE', 'RECEPTIONIST', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: Activity,
     label: 'Doctors',
     href: '/dashboard/doctors',
-    roles: ['RECEPTIONIST', 'ADMIN'],
+    roles: ['RECEPTIONIST', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: FileText,
     label: 'Medical Records',
     href: '/dashboard/medical-records',
-    roles: ['PATIENT', 'DOCTOR', 'NURSE', 'ADMIN'],
+    roles: ['PATIENT', 'DOCTOR', 'NURSE', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: Pill,
     label: 'Prescriptions',
     href: '/dashboard/prescriptions',
-    roles: ['PATIENT', 'DOCTOR', 'PHARMACIST', 'ADMIN'],
+    roles: ['PATIENT', 'DOCTOR', 'PHARMACIST', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: TestTube,
@@ -181,7 +181,7 @@ const menuItems: MenuItem[] = [
   {
     icon: Briefcase,
     label: 'Pharmacy',
-    roles: ['PHARMACIST', 'ADMIN'],
+    roles: ['PHARMACIST', 'ADMIN', 'SUPER_ADMIN'],
     submenu: [
       {
         label: 'Manage Inventory',
@@ -236,13 +236,13 @@ const menuItems: MenuItem[] = [
     icon: ClipboardList,
     label: 'Inventory',
     href: '/dashboard/pharmacy/inventory',
-    roles: ['LAB_TECHNICIAN', 'ADMIN'],
+    roles: ['LAB_TECHNICIAN', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: BarChart3,
     label: 'Reports',
     href: '/dashboard/reports',
-    roles: ['DOCTOR', 'ADMIN'],
+    roles: ['DOCTOR', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: UserCog,
@@ -260,13 +260,13 @@ const menuItems: MenuItem[] = [
     icon: UserCog,
     label: 'Staff Management',
     href: '/dashboard/staff',
-    roles: ['ADMIN'],
+    roles: ['ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: Settings,
     label: 'Settings',
     href: '/dashboard/settings',
-    roles: ['PATIENT', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'LAB_TECHNICIAN', 'PHARMACIST', 'ADMIN'],
+    roles: ['PATIENT', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'LAB_TECHNICIAN', 'PHARMACIST', 'ADMIN', 'SUPER_ADMIN'],
   },
 ];
 

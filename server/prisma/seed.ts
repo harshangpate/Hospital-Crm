@@ -3,8 +3,30 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+// Helper function to generate random date within range
+function randomDate(start: Date, end: Date): Date {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+}
+
+// Helper function to get random item from array
+function randomItem<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
 async function main() {
-  console.log('🌱 Starting database seed...\n');
+  console.log('🌱 Starting comprehensive database seed...\n');
+  console.log('This will create a fully populated hospital system with:\n');
+  console.log('  - Multiple users (doctors, patients, staff)');
+  console.log('  - Appointments with different statuses');
+  console.log('  - Medical records and diagnoses');
+  console.log('  - Prescriptions');
+  console.log('  - Lab tests with results');
+  console.log('  - Radiology tests with reports');
+  console.log('  - IPD admissions and discharges');
+  console.log('  - Invoices and payments');
+  console.log('  - Pharmacy inventory');
+  console.log('  - Operation theaters and surgeries\n');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
   const hashedPassword = await bcrypt.hash('Password123!', 10);
 

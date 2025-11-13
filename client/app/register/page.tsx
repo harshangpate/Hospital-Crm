@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -38,6 +38,25 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering particles on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Generate particles only on client side with stable values
+  const particles = useMemo(() => {
+    if (!isMounted) return [];
+    
+    return Array.from({ length: 25 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: 3 + Math.random() * 3,
+      delay: Math.random() * 2,
+    }));
+  }, [isMounted]);
 
   const {
     register,
@@ -103,23 +122,23 @@ export default function RegisterPage() {
           }}
         />
         
-        {/* Floating particles */}
-        {[...Array(15)].map((_, i) => (
+        {/* Floating particles - only render on client */}
+        {isMounted && particles.map((particle) => (
           <motion.div
-            key={i}
+            key={particle.id}
             className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
             }}
             animate={{
               y: [0, -40, 0],
               opacity: [0.3, 0.6, 0.3],
             }}
             transition={{
-              duration: 3 + Math.random() * 3,
+              duration: particle.duration,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: particle.delay,
             }}
           />
         ))}

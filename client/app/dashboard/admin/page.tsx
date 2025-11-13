@@ -531,14 +531,14 @@ function ActivityItem({
   time: string;
 }) {
   return (
-    <div className="group flex items-start p-4 bg-gradient-to-r from-gray-50 to-gray-50 hover:from-purple-50 hover:to-pink-50 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer border border-transparent hover:border-purple-200">
+    <div className="group flex items-start p-4 bg-white dark:bg-gray-800/50 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/20 dark:hover:to-pink-900/20 rounded-xl transition-all duration-300 hover:shadow-md cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600">
       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mr-4 shrink-0 group-hover:scale-110 transition-transform duration-300">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-gray-900 group-hover:text-purple-700 transition-colors">{title}</div>
-        <div className="text-xs text-gray-600 truncate mt-1">{description}</div>
-        <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">{title}</div>
+        <div className="text-xs text-gray-600 dark:text-gray-400 truncate mt-1">{description}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-500 mt-2 flex items-center gap-1">
           <Clock className="w-3 h-3" />
           {time}
         </div>

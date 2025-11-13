@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed": "ts-node prisma/seed.ts",
+    "seed:full": "ts-node prisma/comprehensive-seed.ts",
     "create-admin": "ts-node prisma/create-admin.ts",
     "create-superadmin": "ts-node prisma/create-superadmin.ts"
   },

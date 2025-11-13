@@ -667,8 +667,8 @@ export const getUserStats = async (req: Request, res: Response) => {
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { isActive: true } }),
-      prisma.user.count({ where: { role: 'DOCTOR' } }),
-      prisma.user.count({ where: { role: 'PATIENT' } }),
+      prisma.doctor.count(),
+      prisma.patient.count(),
       prisma.user.count({
         where: {
           role: {
