@@ -55,3 +55,7 @@ prisma/migrations/
 
 # OS
 Thumbs.db
+
+# Personal planning files (not for public viewing)
+LINKEDIN_POST_AND_PROTECTION_GUIDE.md
+PRE_PUSH_CHECKLIST.md
