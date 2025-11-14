@@ -94,9 +94,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-4 py-8 overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 py-8 overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
         <motion.div
           className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl"
           animate={{
@@ -151,7 +155,7 @@ export default function RegisterPage() {
         className="w-full max-w-2xl relative z-10"
       >
         {/* Glassmorphism Card */}
-        <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-3xl shadow-2xl overflow-hidden">
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl overflow-hidden">
           {/* Header with gradient */}
           <div className="relative px-8 pt-8 pb-6">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-blue-500/10 to-indigo-500/10" />
@@ -176,10 +180,10 @@ export default function RegisterPage() {
               transition={{ delay: 0.3 }}
               className="relative text-center space-y-2"
             >
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-800 to-blue-800 bg-clip-text text-transparent">
-                Create Patient Account
-              </h1>
-              <p className="text-gray-600">Register to book appointments and access your medical records</p>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+              Create Patient Account
+            </h1>
+            <p className="text-gray-300">Register to book appointments and access your medical records</p>
             </motion.div>
           </div>
 
@@ -193,7 +197,7 @@ export default function RegisterPage() {
                   transition={{ delay: 0.4 }}
                   className="space-y-2"
                 >
-                  <Label htmlFor="firstName" className="text-gray-700 font-medium">First Name *</Label>
+                  <Label htmlFor="firstName" className="text-gray-100 font-medium">First Name *</Label>
                   <div className="relative group">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                     <Input
@@ -221,7 +225,7 @@ export default function RegisterPage() {
                   transition={{ delay: 0.45 }}
                   className="space-y-2"
                 >
-                  <Label htmlFor="lastName" className="text-gray-700 font-medium">Last Name *</Label>
+                  <Label htmlFor="lastName" className="text-gray-100 font-medium">Last Name *</Label>
                   <div className="relative group">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                     <Input
@@ -251,7 +255,7 @@ export default function RegisterPage() {
                 transition={{ delay: 0.5 }}
                 className="space-y-2"
               >
-                <Label htmlFor="email" className="text-gray-700 font-medium">Email *</Label>
+                <Label htmlFor="email" className="text-gray-100 font-medium">Email *</Label>
                 <div className="relative group">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                   <Input
@@ -282,7 +286,7 @@ export default function RegisterPage() {
                   transition={{ delay: 0.55 }}
                   className="space-y-2"
                 >
-                  <Label htmlFor="phone" className="text-gray-700 font-medium">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-gray-100 font-medium">Phone Number</Label>
                   <div className="relative group">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                     <Input
@@ -311,7 +315,7 @@ export default function RegisterPage() {
                   transition={{ delay: 0.6 }}
                   className="space-y-2"
                 >
-                  <Label htmlFor="gender" className="text-gray-700 font-medium">Gender</Label>
+                  <Label htmlFor="gender" className="text-gray-100 font-medium">Gender</Label>
                   <Select
                     onValueChange={(value) => setValue('gender', value as 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY')}
                     disabled={isLoading}
@@ -337,7 +341,7 @@ export default function RegisterPage() {
                   transition={{ delay: 0.65 }}
                   className="space-y-2"
                 >
-                  <Label htmlFor="password" className="text-gray-700 font-medium">Password *</Label>
+                  <Label htmlFor="password" className="text-gray-100 font-medium">Password *</Label>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                     <Input
@@ -376,7 +380,7 @@ export default function RegisterPage() {
                   transition={{ delay: 0.7 }}
                   className="space-y-2"
                 >
-                  <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">Confirm Password *</Label>
+                  <Label htmlFor="confirmPassword" className="text-gray-100 font-medium">Confirm Password *</Label>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                     <Input
@@ -415,7 +419,7 @@ export default function RegisterPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.75 }}
-                className="text-xs text-gray-500 bg-blue-50/50 rounded-xl p-4 border border-blue-100"
+                className="text-xs text-gray-300 bg-purple-900/30 rounded-xl p-4 border border-purple-700/50"
               >
                 <p>By signing up, you agree to our Terms of Service and Privacy Policy.</p>
                 <p className="text-blue-600 font-medium mt-2">💡 Note: Staff registration is managed by hospital administrators.</p>
@@ -443,7 +447,7 @@ export default function RegisterPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.85 }}
-                className="text-center text-sm text-gray-600 pt-2"
+                className="text-center text-sm text-gray-300 pt-2"
               >
                 Already have an account?{' '}
                 <Link

@@ -178,16 +178,16 @@ export default function PatientDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Upcoming Appointments */}
             <div className="lg:col-span-2">
-              <AnimatedCard delay={0.5} className="backdrop-blur-sm bg-white/90 border-white/20">
+              <AnimatedCard delay={0.5} className="backdrop-blur-sm bg-slate-800/50 border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  <h3 className="text-lg font-semibold text-white">
                     Upcoming Appointments
                   </h3>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => router.push('/dashboard/appointments')}
-                    className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-indigo-700 font-medium transition-all"
+                    className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-all"
                   >
                     View All →
                   </motion.button>
@@ -202,9 +202,9 @@ export default function PatientDashboard() {
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"
+                        className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full mx-auto mb-2"
                       />
-                      <p className="text-gray-500 text-sm">Loading appointments...</p>
+                      <p className="text-gray-300 text-sm">Loading appointments...</p>
                     </motion.div>
                   ) : upcomingAppointments.length === 0 ? (
                     <motion.div
@@ -218,7 +218,7 @@ export default function PatientDashboard() {
                       >
                         <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                       </motion.div>
-                      <p className="text-gray-600 mb-4">No upcoming appointments</p>
+                      <p className="text-gray-300 mb-4">No upcoming appointments</p>
                       <GradientButton
                         onClick={() => router.push('/dashboard/appointments/book')}
                         variant="primary"
@@ -251,8 +251,8 @@ export default function PatientDashboard() {
 
             {/* Quick Actions */}
             <div className="space-y-6">
-              <AnimatedCard delay={0.6} className="backdrop-blur-sm bg-white/90 border-white/20">
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-4">Quick Actions</h3>
+              <AnimatedCard delay={0.6} className="backdrop-blur-sm bg-slate-800/50 border-slate-700/50">
+                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <ActionButton
@@ -290,17 +290,17 @@ export default function PatientDashboard() {
               </AnimatedCard>
 
               {/* Health Reminders */}
-              <AnimatedCard delay={0.7} className="backdrop-blur-sm bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200/50">
+              <AnimatedCard delay={0.7} className="backdrop-blur-sm bg-gradient-to-br from-amber-900/40 to-orange-900/40 border-amber-500/30">
                 <div className="flex items-center mb-3">
                   <motion.div
                     animate={{ rotate: [0, 10, -10, 10, 0] }}
                     transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
                   >
-                    <AlertCircle className="w-5 h-5 text-amber-600 mr-2" />
+                    <AlertCircle className="w-5 h-5 text-amber-400 mr-2" />
                   </motion.div>
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-amber-900 to-orange-900 bg-clip-text text-transparent">Reminders</h3>
+                  <h3 className="text-lg font-semibold text-amber-200">Reminders</h3>
                 </div>
-                <div className="space-y-2 text-sm text-amber-800">
+                <div className="space-y-2 text-sm text-amber-100">
                   <motion.p
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -328,22 +328,22 @@ export default function PatientDashboard() {
           </div>
 
           {/* Recent Prescriptions */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="backdrop-blur-sm bg-slate-800/50 border border-slate-700/50 rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Prescriptions</h3>
+              <h3 className="text-lg font-semibold text-white">Recent Prescriptions</h3>
               <button 
                 onClick={() => router.push('/dashboard/prescriptions')}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-blue-400 hover:text-blue-300 font-medium"
               >
                 View All
               </button>
             </div>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
               </div>
             ) : recentPrescriptions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-300">
                 <Pill className="w-12 h-12 mx-auto mb-2 text-gray-400" />
                 <p>No prescriptions found</p>
               </div>
@@ -391,7 +391,7 @@ function AppointmentCard({
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ duration: 0.2 }}
-      className="flex items-center p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
+      className="flex items-center p-4 bg-slate-700/30 rounded-xl border border-slate-600/50 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer"
     >
       <motion.div
         whileHover={{ rotate: 360 }}
@@ -401,9 +401,9 @@ function AppointmentCard({
         <Calendar className="w-6 h-6 text-white" />
       </motion.div>
       <div className="flex-1">
-        <div className="font-semibold text-gray-900">{doctor}</div>
-        <div className="text-sm text-gray-600">{specialty}</div>
-        <div className="flex items-center mt-1 text-sm text-gray-500">
+        <div className="font-semibold text-white">{doctor}</div>
+        <div className="text-sm text-gray-300">{specialty}</div>
+        <div className="flex items-center mt-1 text-sm text-gray-400">
           <Clock className="w-3.5 h-3.5 mr-1" />
           {date} at {time}
         </div>
@@ -429,10 +429,10 @@ function ActionButton({
   onClick?: () => void;
 }) {
   const colorClasses = {
-    blue: 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-100 hover:to-indigo-100 border-blue-200',
-    green: 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 hover:from-green-100 hover:to-emerald-100 border-green-200',
-    purple: 'bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 hover:from-purple-100 hover:to-pink-100 border-purple-200',
-    orange: 'bg-gradient-to-r from-orange-50 to-red-50 text-orange-700 hover:from-orange-100 hover:to-red-100 border-orange-200',
+    blue: 'bg-blue-900/40 text-blue-200 hover:bg-blue-900/60 border-blue-700/50',
+    green: 'bg-green-900/40 text-green-200 hover:bg-green-900/60 border-green-700/50',
+    purple: 'bg-purple-900/40 text-purple-200 hover:bg-purple-900/60 border-purple-700/50',
+    orange: 'bg-orange-900/40 text-orange-200 hover:bg-orange-900/60 border-orange-700/50',
   }[color];
 
   return (
@@ -463,10 +463,10 @@ function PrescriptionCard({
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ duration: 0.2 }}
-      className={`p-4 rounded-xl border-2 ${urgent ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 shadow-amber-200 shadow-lg' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-white shadow-sm hover:shadow-md'} transition-all cursor-pointer`}
+      className={`p-4 rounded-xl border-2 ${urgent ? 'border-amber-500 bg-amber-900/30 shadow-amber-500/20 shadow-lg' : 'border-slate-600/50 bg-slate-700/30 shadow-sm hover:shadow-md'} transition-all cursor-pointer`}
     >
       <div className="flex items-start justify-between mb-2">
-        <div className="font-semibold text-gray-900">{medication}</div>
+        <div className="font-semibold text-white">{medication}</div>
         {urgent && (
           <motion.span
             animate={{ scale: [1, 1.1, 1] }}
@@ -477,9 +477,9 @@ function PrescriptionCard({
           </motion.span>
         )}
       </div>
-      <div className="text-sm text-gray-600 mb-1">Prescribed by {doctor}</div>
-      <div className="text-sm text-gray-500">{frequency}</div>
-      <div className={`text-sm mt-2 font-medium ${urgent ? 'bg-gradient-to-r from-amber-700 to-orange-700 bg-clip-text text-transparent' : 'text-gray-700'}`}>
+      <div className="text-sm text-gray-300 mb-1">Prescribed by {doctor}</div>
+      <div className="text-sm text-gray-400">{frequency}</div>
+      <div className={`text-sm mt-2 font-medium ${urgent ? 'text-amber-300' : 'text-gray-300'}`}>
         {refills}
       </div>
     </motion.div>

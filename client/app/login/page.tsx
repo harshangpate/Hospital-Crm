@@ -123,11 +123,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 p-4 overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
         <motion.div
-          className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"
+          className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-indigo-400/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             rotate: [0, 90, 0],
@@ -139,7 +142,7 @@ export default function LoginPage() {
           }}
         />
         <motion.div
-          className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-purple-400/20 to-indigo-400/20 rounded-full blur-3xl"
+          className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-purple-400/10 to-indigo-400/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.3, 1],
             rotate: [0, -90, 0],
@@ -211,10 +214,10 @@ export default function LoginPage() {
                     transition={{ delay: 0.3 }}
                     className="relative text-center space-y-2"
                   >
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                      Welcome Back
-                    </h1>
-                    <p className="text-gray-600">Sign in to your Hospital CRM account</p>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+                    Welcome Back
+                  </h1>
+                  <p className="text-gray-300">Sign in to your Hospital CRM account</p>
                   </motion.div>
                 </div>
 
@@ -227,7 +230,7 @@ export default function LoginPage() {
                       transition={{ delay: 0.4 }}
                       className="space-y-2"
                     >
-                      <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
+                      <Label htmlFor="email" className="text-gray-100 font-medium">Email</Label>
                       <div className="relative group">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                         <Input
@@ -257,7 +260,7 @@ export default function LoginPage() {
                       transition={{ delay: 0.5 }}
                       className="space-y-2"
                     >
-                      <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
+                      <Label htmlFor="password" className="text-gray-100 font-medium">Password</Label>
                       <div className="relative group">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                         <Input
@@ -331,7 +334,7 @@ export default function LoginPage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.8 }}
-                      className="text-center text-sm text-gray-600 pt-2"
+                      className="text-center text-sm text-gray-300 pt-2"
                     >
                       Don&apos;t have an account?{' '}
                       <Link
@@ -366,10 +369,10 @@ export default function LoginPage() {
                     transition={{ delay: 0.3 }}
                     className="relative text-center space-y-2"
                   >
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                      Two-Factor Authentication
-                    </h1>
-                    <p className="text-gray-600">Enter the 6-digit code from your authenticator app</p>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
+                    Two-Factor Authentication
+                  </h1>
+                  <p className="text-gray-300">Enter the 6-digit code from your authenticator app</p>
                   </motion.div>
                 </div>
 
@@ -382,7 +385,7 @@ export default function LoginPage() {
                       transition={{ delay: 0.4 }}
                       className="space-y-2"
                     >
-                      <Label htmlFor="twoFactorCode" className="text-gray-700 font-medium">Authentication Code</Label>
+                      <Label htmlFor="twoFactorCode" className="text-gray-100 font-medium">Authentication Code</Label>
                       <Input
                         id="twoFactorCode"
                         type="text"
@@ -393,7 +396,7 @@ export default function LoginPage() {
                         disabled={isLoading}
                         className="text-center text-3xl tracking-widest font-bold h-16 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl transition-all"
                       />
-                      <p className="text-xs text-gray-500 text-center">
+                      <p className="text-xs text-gray-400 text-center">
                         Enter the code from Google Authenticator, Authy, or similar app
                       </p>
                     </motion.div>

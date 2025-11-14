@@ -393,16 +393,16 @@ export default function DoctorDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Today's Schedule */}
             <div className="lg:col-span-2">
-              <AnimatedCard delay={0.5} className="backdrop-blur-sm bg-white/90 border-white/20">
+              <AnimatedCard delay={0.5} className="backdrop-blur-sm bg-slate-800/50 border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  <h3 className="text-lg font-semibold text-white">
                     Today&apos;s Schedule
                   </h3>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => router.push('/dashboard/doctor/schedule?view=month')}
-                    className="text-sm bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-indigo-700 font-medium transition-all"
+                    className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-all"
                   >
                     View Calendar →
                   </motion.button>
@@ -446,8 +446,8 @@ export default function DoctorDashboard() {
 
             {/* Quick Actions & Stats */}
             <div className="space-y-6">
-              <AnimatedCard delay={0.6} className="backdrop-blur-sm bg-white/90 border-white/20">
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-4">Quick Actions</h3>
+              <AnimatedCard delay={0.6} className="backdrop-blur-sm bg-slate-800/50 border-slate-700/50">
+                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <ActionButton
@@ -485,8 +485,8 @@ export default function DoctorDashboard() {
               </AnimatedCard>
 
               {/* Waiting Room */}
-              <AnimatedCard delay={0.7} className="backdrop-blur-sm bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/50">
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4">Waiting Room</h3>
+              <AnimatedCard delay={0.7} className="backdrop-blur-sm bg-gradient-to-br from-blue-900/40 to-indigo-900/40 border-blue-700/50">
+                <h3 className="text-lg font-semibold text-blue-200 mb-4">Waiting Room</h3>
                 <div className="space-y-3">
                   {waitingRoomPatients.length === 0 ? (
                     <motion.div
@@ -494,7 +494,7 @@ export default function DoctorDashboard() {
                       animate={{ opacity: 1 }}
                       className="text-center py-4"
                     >
-                      <p className="text-sm text-blue-700">No patients waiting</p>
+                      <p className="text-sm text-blue-300">No patients waiting</p>
                     </motion.div>
                   ) : (
                     waitingRoomPatients.map((appointment, index) => (
@@ -517,21 +517,21 @@ export default function DoctorDashboard() {
           </div>
 
           {/* Recent Activities */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="backdrop-blur-sm bg-slate-800/50 border border-slate-700/50 rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
+              <h3 className="text-lg font-semibold text-white">Recent Activities</h3>
               <button
                 onClick={() => loadDashboardData()}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors"
                 title="Refresh activities"
               >
-                <RefreshCw className="w-4 h-4 text-gray-600" />
+                <RefreshCw className="w-4 h-4 text-gray-400" />
               </button>
             </div>
             <div className="space-y-3">
               {recentActivities.length === 0 ? (
                 <div className="text-center py-4">
-                  <p className="text-sm text-gray-500">No recent activities</p>
+                  <p className="text-sm text-gray-300">No recent activities</p>
                 </div>
               ) : (
                 recentActivities.map((activity, index) => (
@@ -585,7 +585,7 @@ function AppointmentCard({
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ duration: 0.2 }}
-      className="flex items-center p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 hover:border-green-400 hover:shadow-lg transition-all cursor-pointer"
+      className="flex items-center p-4 bg-slate-700/30 rounded-xl border border-slate-600/50 hover:border-green-400 hover:shadow-lg transition-all cursor-pointer"
     >
       <motion.div
         whileHover={{ rotate: 360 }}
@@ -595,9 +595,9 @@ function AppointmentCard({
         <Users className="w-6 h-6 text-white" />
       </motion.div>
       <div className="flex-1">
-        <div className="font-semibold text-gray-900">{patient}</div>
-        <div className="text-sm text-gray-600">{patientId}</div>
-        <div className="flex items-center mt-1 text-sm text-gray-500">
+        <div className="font-semibold text-white">{patient}</div>
+        <div className="text-sm text-gray-300">{patientId}</div>
+        <div className="flex items-center mt-1 text-sm text-gray-400">
           <Clock className="w-3.5 h-3.5 mr-1" />
           {time} • {type}
         </div>
@@ -623,10 +623,10 @@ function ActionButton({
   onClick?: () => void;
 }) {
   const colorClasses = {
-    blue: 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-100 hover:to-indigo-100 border-blue-200',
-    green: 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 hover:from-green-100 hover:to-emerald-100 border-green-200',
-    purple: 'bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 hover:from-purple-100 hover:to-pink-100 border-purple-200',
-    orange: 'bg-gradient-to-r from-orange-50 to-red-50 text-orange-700 hover:from-orange-100 hover:to-red-100 border-orange-200',
+    blue: 'bg-blue-900/40 text-blue-200 hover:bg-blue-900/60 border-blue-700/50',
+    green: 'bg-green-900/40 text-green-200 hover:bg-green-900/60 border-green-700/50',
+    purple: 'bg-purple-900/40 text-purple-200 hover:bg-purple-900/60 border-purple-700/50',
+    orange: 'bg-orange-900/40 text-orange-200 hover:bg-orange-900/60 border-orange-700/50',
   }[color];
 
   return (
@@ -644,10 +644,10 @@ function WaitingPatient({ name, waitTime }: { name: string; waitTime: string }) 
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-blue-100 hover:border-blue-300 cursor-pointer"
+      className="flex items-center justify-between p-3 bg-slate-700/30 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-600/50 hover:border-blue-400 cursor-pointer"
     >
-      <span className="text-sm font-medium text-gray-900">{name}</span>
-      <span className="text-xs font-medium bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{waitTime}</span>
+      <span className="text-sm font-medium text-white">{name}</span>
+      <span className="text-xs font-medium text-blue-400">{waitTime}</span>
     </motion.div>
   );
 }
@@ -662,13 +662,13 @@ function ActivityItem({
   time: string;
 }) {
   return (
-    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-      <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center mr-3">
+    <div className="flex items-center p-3 bg-slate-700/30 rounded-lg">
+      <div className="w-10 h-10 rounded-lg bg-slate-600/50 flex items-center justify-center mr-3">
         {icon}
       </div>
       <div className="flex-1">
-        <div className="text-sm font-medium text-gray-900">{title}</div>
-        <div className="text-xs text-gray-500">{time}</div>
+        <div className="text-sm font-medium text-white">{title}</div>
+        <div className="text-xs text-gray-400">{time}</div>
       </div>
     </div>
   );
