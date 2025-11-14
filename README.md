@@ -333,21 +333,43 @@ npx prisma generate
 
 # Run migrations to create tables
 npx prisma migrate dev --name init
-
-# Seed database with sample data
-npx prisma db seed
 ```
 
-#### 5️⃣ Create Super Admin (Optional)
+#### 5️⃣ Create Your First Admin User
 
+After migrations, you need to create an admin account manually:
+
+**Option 1: Using Prisma Studio (Recommended)**
 ```bash
-# Create a super admin user
-npx ts-node prisma/create-superadmin.ts
+npx prisma studio
+```
+Then:
+1. Open `users` table
+2. Click "Add record"
+3. Fill in required fields (email, username, password hash, role: SUPER_ADMIN)
+4. Note: Password must be bcrypt hashed
 
-# Follow the prompts to enter:
-# - Email
-# - Password
-# - First Name
+**Option 2: Direct SQL**
+```sql
+-- Run this in your PostgreSQL client
+-- Password is 'admin123' (bcrypt hashed)
+INSERT INTO users (email, username, password, role, "firstName", "lastName", "isActive", "isEmailVerified") 
+VALUES (
+  'admin@yourhospital.com',
+  'admin',
+  '$2a$10$YourBcryptHashedPasswordHere',
+  'SUPER_ADMIN',
+  'Admin',
+  'User',
+  true,
+  true
+);
+```
+
+**Option 3: Use Registration API**
+1. Start the server
+2. Use the registration endpoint to create your first user
+3. Manually update the role to SUPER_ADMIN in the database
 # - Last Name
 ```
 
@@ -435,7 +457,7 @@ hospital-crm/
 │   ├── 📂 prisma/                    # Database Schema & Migrations
 │   │   ├── 📄 schema.prisma          # Database schema
 │   │   ├── 📂 migrations/            # Database migrations
-│   │   ├── 📄 seed.ts                # Database seeding
+│   │   ├── 📄 schema.prisma          # Database schema
 │   │   └── 📄 create-superadmin.ts   # Admin creation script
 │   │
 │   ├── 📂 src/
@@ -619,24 +641,14 @@ For complete API documentation, see [API_TESTING.md](API_TESTING.md)
 
 ---
 
-## 🔑 Default Credentials
+## 🔑 First Login
 
-After running the seed script, you can login with:
+After creating your admin user (see installation step 5), use those credentials to login and access the system.
 
-### Super Admin
-- **Email**: `superadmin@hospital.com`
-
-### Admin
-- **Email**: `admin@hospital.com`
-
-### Doctor
-- **Email**: `doctor@hospital.com`
-
-### Other Roles
-- **Nurse**: `nurse@hospital.com`
-- **Receptionist**: `receptionist@hospital.com`
-- **Lab Technician**: `lab@hospital.com`
-- **Pharmacist**: `pharmacist@hospital.com`
+From the admin dashboard, you can:
+- Create additional users (doctors, staff, patients)
+- Configure system settings
+- Manage all hospital operations
 
 ---
 
