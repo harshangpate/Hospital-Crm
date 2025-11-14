@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DashboardLayout from '@/components/DashboardLayout';
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -22,7 +23,7 @@ import {
   getOTAvailability,
   CreateSurgeryData 
 } from '@/lib/api/surgery';
-import { getAllDoctors } from '@/lib/api/users';
+import { getAllUsers } from '@/lib/api/users';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import Card3D from '@/components/ui/Card3D';
 
@@ -76,18 +77,20 @@ export default function SurgerySchedulerPage() {
       const endDate = new Date(selectedDate);
       endDate.setHours(23, 59, 59, 999);
 
-      const [surgeriesData, otsData, doctorsData] = await Promise.all([
+      const [surgeriesData, otsData, doctorsData, patientsData] = await Promise.all([
         getAllSurgeries({
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
         }),
         getAllOperationTheaters(),
-        getAllDoctors(),
+        getAllUsers({ role: 'DOCTOR' }),
+        getAllUsers({ role: 'PATIENT' }),
       ]);
 
       setSurgeries(surgeriesData.data || []);
       setOperationTheaters(otsData.data || []);
       setDoctors(doctorsData.data || []);
+      setPatients(patientsData.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -142,17 +145,20 @@ export default function SurgerySchedulerPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading surgery schedule...</p>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading surgery schedule...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
       {/* Header */}
       <motion.div 
         className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
@@ -401,7 +407,342 @@ export default function SurgerySchedulerPage() {
       </ScrollReveal>
 
       {/* Create Surgery Modal would go here */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Schedule Surgery</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              
+              try {
+                const surgeryData: CreateSurgeryData = {
+                  patientId: parseInt(formData.get('patientId') as string),
+                  primarySurgeonId: parseInt(formData.get('primarySurgeonId') as string),
+                  operationTheaterId: parseInt(formData.get('operationTheaterId') as string),
+                  surgeryName: formData.get('surgeryName') as string,
+                  surgeryType: formData.get('surgeryType') as 'ELECTIVE' | 'EMERGENCY' | 'DAY_CARE',
+                  description: formData.get('description') as string,
+                  diagnosis: formData.get('diagnosis') as string,
+                  scheduledDate: formData.get('scheduledDate') as string,
+                  scheduledStartTime: new Date(`${formData.get('scheduledDate')}T${formData.get('scheduledStartTime')}`).toISOString(),
+                  scheduledEndTime: new Date(`${formData.get('scheduledDate')}T${formData.get('scheduledEndTime')}`).toISOString(),
+                  estimatedDuration: parseInt(formData.get('estimatedDuration') as string),
+                  priority: formData.get('priority') as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW',
+                  anesthesiaType: formData.get('anesthesiaType') as 'GENERAL' | 'SPINAL' | 'EPIDURAL' | 'LOCAL' | 'REGIONAL' | 'SEDATION',
+                  bloodRequirement: formData.get('bloodRequirement') as string || undefined,
+                  specialEquipment: formData.get('specialEquipment') as string || undefined,
+                  specialInstructions: formData.get('specialInstructions') as string || undefined,
+                  estimatedCost: formData.get('estimatedCost') ? parseFloat(formData.get('estimatedCost') as string) : undefined,
+                };
+
+                await createSurgery(surgeryData);
+                setShowCreateModal(false);
+                fetchData();
+                alert('Surgery scheduled successfully!');
+              } catch (error) {
+                console.error('Error creating surgery:', error);
+                alert('Failed to schedule surgery. Please try again.');
+              }
+            }} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Patient Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Patient <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="patientId"
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Patient</option>
+                    {patients.map((patient) => (
+                      <option key={patient.id} value={patient.patient?.id}>
+                        {patient.firstName} {patient.lastName} - {patient.patient?.patientId}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Surgeon Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Primary Surgeon <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="primarySurgeonId"
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Surgeon</option>
+                    {doctors.map((doctor) => (
+                      <option key={doctor.id} value={doctor.doctor?.id}>
+                        Dr. {doctor.firstName} {doctor.lastName} - {doctor.doctor?.specialization}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Operation Theater */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Operation Theater <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="operationTheaterId"
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select OT</option>
+                    {operationTheaters.map((ot) => (
+                      <option key={ot.id} value={ot.id}>
+                        {ot.name} ({ot.type}) - {ot.status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Surgery Type */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Surgery Type <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="surgeryType"
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Type</option>
+                    <option value="ELECTIVE">Elective</option>
+                    <option value="EMERGENCY">Emergency</option>
+                    <option value="DAY_CARE">Day Care</option>
+                  </select>
+                </div>
+
+                {/* Surgery Name */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Surgery Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="surgeryName"
+                    required
+                    placeholder="e.g., Laparoscopic Cholecystectomy"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Diagnosis */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Diagnosis <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="diagnosis"
+                    required
+                    placeholder="e.g., Cholelithiasis"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Scheduled Date */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Scheduled Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="scheduledDate"
+                    required
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Start Time */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Start Time <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    name="scheduledStartTime"
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* End Time */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    End Time <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    name="scheduledEndTime"
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Estimated Duration (minutes) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="estimatedDuration"
+                    required
+                    min="1"
+                    placeholder="e.g., 120"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Priority <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="priority"
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Priority</option>
+                    <option value="CRITICAL">Critical</option>
+                    <option value="HIGH">High</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LOW">Low</option>
+                  </select>
+                </div>
+
+                {/* Anesthesia Type */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Anesthesia Type <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="anesthesiaType"
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Anesthesia</option>
+                    <option value="GENERAL">General</option>
+                    <option value="SPINAL">Spinal</option>
+                    <option value="EPIDURAL">Epidural</option>
+                    <option value="LOCAL">Local</option>
+                    <option value="REGIONAL">Regional</option>
+                    <option value="SEDATION">Sedation</option>
+                  </select>
+                </div>
+
+                {/* Blood Requirement */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Blood Requirement
+                  </label>
+                  <input
+                    type="text"
+                    name="bloodRequirement"
+                    placeholder="e.g., 2 units O+"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Estimated Cost */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Estimated Cost (₹)
+                  </label>
+                  <input
+                    type="number"
+                    name="estimatedCost"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g., 50000"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    required
+                    rows={3}
+                    placeholder="Describe the surgery procedure..."
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Special Equipment */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Special Equipment
+                  </label>
+                  <textarea
+                    name="specialEquipment"
+                    rows={2}
+                    placeholder="List any special equipment required..."
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Special Instructions */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Special Instructions
+                  </label>
+                  <textarea
+                    name="specialInstructions"
+                    rows={2}
+                    placeholder="Any special instructions for the surgery..."
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                >
+                  Schedule Surgery
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {/* Implementation continues in next file due to length */}
     </div>
+    </DashboardLayout>
   );
 }

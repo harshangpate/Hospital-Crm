@@ -179,6 +179,33 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
+    icon: Activity,
+    label: 'Surgery & OT',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'DOCTOR', 'NURSE'],
+    submenu: [
+      {
+        label: 'OT Dashboard',
+        href: '/dashboard/operation-theaters',
+        icon: Hospital,
+      },
+      {
+        label: 'Surgery Schedule',
+        href: '/dashboard/surgery/schedule',
+        icon: Calendar,
+      },
+      {
+        label: 'OT Equipment',
+        href: '/dashboard/operation-theaters/equipment',
+        icon: Package,
+      },
+      {
+        label: 'Analytics',
+        href: '/dashboard/surgery/analytics',
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
     icon: Briefcase,
     label: 'Pharmacy',
     roles: ['PHARMACIST', 'ADMIN', 'SUPER_ADMIN'],
