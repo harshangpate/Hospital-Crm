@@ -174,49 +174,15 @@ export const deleteUser = async (id: string) => {
 // Get user statistics
 export const getUserStats = async () => {
   try {
-    // Fetch all users and calculate stats
-    const response = await apiClient.get('/users');
-    if (response.data.success) {
-      const users = response.data.data.users || [];
-      
-      const totalUsers = users.length;
-      const activeUsers = users.filter((u: any) => u.isActive).length;
-      const inactiveUsers = users.filter((u: any) => !u.isActive).length;
-      const totalDoctors = users.filter((u: any) => u.role === 'DOCTOR').length;
-      const totalPatients = users.filter((u: any) => u.role === 'PATIENT').length;
-      const totalStaff = users.filter((u: any) => 
-        u.role !== 'PATIENT' && u.role !== 'DOCTOR' && u.role !== 'SUPER_ADMIN'
-      ).length;
-      
-      // Users created in last 7 days
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const recentUsers = users.filter((u: any) => 
-        new Date(u.createdAt) >= sevenDaysAgo
-      ).length;
-      
-      return {
-        success: true,
-        data: {
-          totalUsers,
-          activeUsers,
-          inactiveUsers,
-          totalDoctors,
-          totalPatients,
-          totalStaff,
-          recentUsers
-        }
-      };
-    }
-    
-    return {
-      success: false,
-      message: 'Failed to fetch users'
-    };
+    // Call the backend stats endpoint instead of calculating client-side
+    const response = await apiClient.get('/users/stats');
+    return response.data;
   } catch (error: any) {
+    console.error('Get user stats error:', error);
     return {
       success: false,
-      message: error.response?.data?.message || 'Failed to fetch user statistics'
+      message: error.response?.data?.message || 'Failed to fetch user statistics',
+      data: null
     };
   }
 };

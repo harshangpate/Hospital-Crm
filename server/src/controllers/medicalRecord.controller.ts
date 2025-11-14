@@ -29,6 +29,31 @@ export const getMedicalRecords = async (req: Request, res: Response) => {
     // Build where clause
     const where: any = {};
     
+    // IMPORTANT: Filter by user role for security
+    if (req.user?.role === 'PATIENT') {
+      // Patients can only see their own medical records
+      const patient = await prisma.patient.findFirst({
+        where: { userId: req.user.id },
+        select: { id: true }
+      });
+      
+      if (patient) {
+        where.patientId = patient.id;
+      } else {
+        // If no patient record found, return empty array
+        return res.status(200).json({
+          success: true,
+          data: [],
+          pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total: 0,
+            totalPages: 0
+          }
+        });
+      }
+    }
+    
     if (patientId) where.patientId = patientId as string;
     if (doctorId) where.doctorId = doctorId as string;
     if (recordType) where.recordType = recordType as string;
@@ -197,6 +222,21 @@ export const getMedicalRecordById = async (req: Request, res: Response) => {
         success: false,
         message: 'Medical record not found'
       });
+    }
+
+    // SECURITY: If user is a patient, verify they can only access their own records
+    if (req.user?.role === 'PATIENT') {
+      const patient = await prisma.patient.findFirst({
+        where: { userId: req.user.id },
+        select: { id: true }
+      });
+      
+      if (!patient || record.patientId !== patient.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view your own medical records.'
+        });
+      }
     }
 
     return res.status(200).json({

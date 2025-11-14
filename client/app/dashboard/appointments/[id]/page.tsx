@@ -327,7 +327,7 @@ export default function AppointmentDetailsPage() {
                       
                       <div className="flex items-center gap-2 text-gray-700">
                         <CreditCard className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm">Consultation Fee: ${appointment.doctor.consultationFee}</span>
+                        <span className="text-sm">Consultation Fee: ₹{appointment.doctor.consultationFee}</span>
                       </div>
                       
                       <div className="flex items-center gap-2 text-gray-700">
@@ -460,7 +460,7 @@ export default function AppointmentDetailsPage() {
                   <div>
                     <p className="text-sm text-gray-600">Consultation Fee</p>
                     <p className="font-medium text-gray-900">
-                      ${appointment.doctor.consultationFee}
+                      ₹{appointment.doctor.consultationFee}
                     </p>
                   </div>
                 </div>

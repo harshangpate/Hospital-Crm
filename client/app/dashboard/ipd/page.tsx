@@ -180,8 +180,8 @@ export default function IPDDashboardPage() {
                       {stats.activeAdmissions}
                     </p>
                   </div>
-                  <div className="bg-green-100 p-3 rounded-full">
-                    <UserCheck className="w-6 h-6 text-green-600" />
+                  <div className="bg-green-500/20 dark:bg-green-500/10 p-3 rounded-full">
+                    <UserCheck className="w-6 h-6 text-green-500 dark:text-green-400" />
                   </div>
                 </div>
               </div>
@@ -197,8 +197,8 @@ export default function IPDDashboardPage() {
                       {stats.occupiedBeds}/{stats.totalBeds} beds
                     </p>
                   </div>
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <Bed className="w-6 h-6 text-blue-600" />
+                  <div className="bg-blue-500/20 dark:bg-blue-500/10 p-3 rounded-full">
+                    <Bed className="w-6 h-6 text-blue-500 dark:text-blue-400" />
                   </div>
                 </div>
               </div>
@@ -241,8 +241,8 @@ export default function IPDDashboardPage() {
                   onClick={() => setStatusFilter('ADMITTED')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                     statusFilter === 'ADMITTED'
-                      ? 'bg-green-100 text-green-800 border-2 border-green-500'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-green-500/20 text-green-400 border-2 border-green-500/50 dark:bg-green-500/10 dark:border-green-500/30'
+                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 dark:bg-gray-800/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   <UserCheck className="w-4 h-4 inline mr-1" />
@@ -252,8 +252,8 @@ export default function IPDDashboardPage() {
                   onClick={() => setStatusFilter('DISCHARGED')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                     statusFilter === 'DISCHARGED'
-                      ? 'bg-gray-100 text-gray-800 border-2 border-gray-500'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-gray-500/20 text-gray-300 border-2 border-gray-500/50 dark:bg-gray-500/10 dark:border-gray-500/30'
+                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 dark:bg-gray-800/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   <UserX className="w-4 h-4 inline mr-1" />
@@ -263,8 +263,8 @@ export default function IPDDashboardPage() {
                   onClick={() => setStatusFilter('TRANSFERRED')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                     statusFilter === 'TRANSFERRED'
-                      ? 'bg-blue-100 text-blue-800 border-2 border-blue-500'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 dark:bg-blue-500/10 dark:border-blue-500/30'
+                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 dark:bg-gray-800/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   <Activity className="w-4 h-4 inline mr-1" />

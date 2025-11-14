@@ -171,7 +171,7 @@ export default function AdminDashboard() {
             />
             
             {/* Content */}
-            <div className="relative z-10">
+            <div className="relative z-0">
               <div className="flex items-center gap-3 mb-3">
                 <motion.div
                   animate={{ rotate: [0, 360] }}
@@ -195,7 +195,10 @@ export default function AdminDashboard() {
               icon={<Users className="w-8 h-8" />}
               title="Total Patients"
               value={formatNumber(stats.totalPatients)}
-              trend={{ value: 12, isPositive: true }}
+              trend={{ 
+                value: stats.totalPatients > 0 ? Math.round((stats.recentUsers / stats.totalPatients) * 100) : 0, 
+                isPositive: true 
+              }}
               gradient="from-blue-500 to-cyan-600"
               delay={0}
             />
@@ -203,7 +206,10 @@ export default function AdminDashboard() {
               icon={<Stethoscope className="w-8 h-8" />}
               title="Total Doctors"
               value={formatNumber(stats.totalDoctors)}
-              trend={{ value: 8, isPositive: true }}
+              trend={{ 
+                value: stats.totalDoctors > 0 ? Math.round((stats.recentUsers / stats.totalUsers) * 100) : 0, 
+                isPositive: true 
+              }}
               gradient="from-green-500 to-emerald-600"
               delay={0.1}
             />
@@ -211,7 +217,10 @@ export default function AdminDashboard() {
               icon={<Calendar className="w-8 h-8" />}
               title="Today's Appointments"
               value={formatNumber(appointmentStats.totalToday)}
-              trend={{ value: 15, isPositive: true }}
+              trend={{ 
+                value: appointmentStats.totalAppointments > 0 ? Math.round((appointmentStats.totalToday / appointmentStats.totalAppointments) * 100) : 0, 
+                isPositive: true 
+              }}
               gradient="from-purple-500 to-pink-600"
               delay={0.2}
             />
@@ -219,7 +228,10 @@ export default function AdminDashboard() {
               icon={<UserCheck className="w-8 h-8" />}
               title="Active Users"
               value={formatNumber(stats.activeUsers)}
-              trend={{ value: 5, isPositive: true }}
+              trend={{ 
+                value: stats.totalUsers > 0 ? Math.round((stats.activeUsers / stats.totalUsers) * 100) : 0, 
+                isPositive: true 
+              }}
               gradient="from-orange-500 to-red-600"
               delay={0.3}
             />

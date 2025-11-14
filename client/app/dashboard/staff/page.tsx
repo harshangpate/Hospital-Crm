@@ -109,7 +109,7 @@ function StaffContent() {
   const fetchStaff = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/v1/users', {
+      const response = await fetch('http://localhost:5000/api/v1/users?limit=1000', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -118,8 +118,10 @@ function StaffContent() {
         // The API returns { users: [], pagination: {} }
         const usersArray = data.data.users || [];
         
+        // Only include actual staff roles (not admin/accountant/patient/super_admin)
+        const staffRoles = ['DOCTOR', 'NURSE', 'PHARMACIST', 'RECEPTIONIST', 'LAB_TECHNICIAN', 'RADIOLOGIST'];
         const staffData = usersArray.filter(
-          (user: { role: string }) => user.role !== 'PATIENT' && user.role !== 'SUPER_ADMIN'
+          (user: { role: string }) => staffRoles.includes(user.role)
         );
         setStaff(staffData);
         calculateStats(staffData);

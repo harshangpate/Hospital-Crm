@@ -147,18 +147,13 @@ export const getAvailableSlots = async (req: Request, res: Response) => {
       console.log('No weekly schedule, using general availability');
       // Fall back to general availability
       if (!doctor.availableFrom || !doctor.availableTo) {
-        console.log('General availability not set');
-        return res.json({
-          success: true,
-          data: {
-            date: appointmentDate.toISOString().split('T')[0],
-            slots: [],
-            message: 'Doctor has not set their working hours yet',
-          },
-        });
+        console.log('General availability not set, using default hours (9 AM - 5 PM)');
+        startTime = '09:00';
+        endTime = '17:00';
+      } else {
+        startTime = doctor.availableFrom;
+        endTime = doctor.availableTo;
       }
-      startTime = doctor.availableFrom;
-      endTime = doctor.availableTo;
       console.log(`General availability times: ${startTime} - ${endTime}`);
     }
 
@@ -171,13 +166,18 @@ export const getAvailableSlots = async (req: Request, res: Response) => {
           lte: endOfDay,
         },
         status: {
-          notIn: ['CANCELLED', 'NO_SHOW'],
+          notIn: ['CANCELLED', 'NO_SHOW', 'COMPLETED'],
         },
       },
       select: {
+        id: true,
+        appointmentNumber: true,
         appointmentTime: true,
+        status: true,
       },
     });
+    
+    console.log(`Found ${existingAppointments.length} existing appointments:`, existingAppointments);
 
     // Get blocked slots for this date
     const blockedSlots = await prisma.doctorBlockedSlot.findMany({

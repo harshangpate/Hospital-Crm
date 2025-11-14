@@ -44,15 +44,29 @@ export default function PatientsListPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/v1/users?role=PATIENT', {
+      const response = await fetch('http://localhost:5000/api/v1/users?role=PATIENT&limit=1000', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
       if (data.success && data.data) {
         // Handle both array and object responses
-        const patientsArray = Array.isArray(data.data) ? data.data : (data.data.users || []);
-        setPatients(patientsArray);
-        setFilteredPatients(patientsArray);
+        const usersArray = Array.isArray(data.data) ? data.data : (data.data.users || []);
+        const mappedPatients = usersArray.map((user: any) => ({
+          id: user.id,
+          patientId: user.patient?.patientId || 'N/A',
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          dateOfBirth: user.dateOfBirth,
+          gender: user.gender,
+          bloodGroup: user.patient?.bloodGroup || '',
+          city: user.city,
+          state: user.state,
+          createdAt: user.createdAt,
+        }));
+        setPatients(mappedPatients);
+        setFilteredPatients(mappedPatients);
       }
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -258,9 +272,13 @@ export default function PatientsListPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="px-2 py-1 text-sm font-semibold bg-red-100 text-red-800 rounded">
-                            {patient.bloodGroup}
-                          </span>
+                          {patient.bloodGroup ? (
+                            <span className="px-2 py-1 text-sm font-semibold bg-red-100 text-red-800 rounded">
+                              {patient.bloodGroup}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-gray-400">N/A</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
                           {patient.city && patient.state ? `${patient.city}, ${patient.state}` : '-'}

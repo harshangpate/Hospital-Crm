@@ -219,15 +219,20 @@ export default function PrescriptionsPage() {
               No prescriptions found
             </h3>
             <p className="text-gray-600 mb-6">
-              Start by creating a new prescription
+              {userRole === "PATIENT" 
+                ? "You don't have any prescriptions yet"
+                : "Start by creating a new prescription"
+              }
             </p>
-            <Link
-              href="/dashboard/prescriptions/new"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-            >
-              <Plus className="h-5 w-5" />
-              Create New Prescription
-            </Link>
+            {(userRole === "DOCTOR" || userRole === "ADMIN" || userRole === "SUPER_ADMIN") && (
+              <Link
+                href="/dashboard/prescriptions/new"
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+              >
+                <Plus className="h-5 w-5" />
+                Create New Prescription
+              </Link>
+            )}
           </div>
         ) : (
           <div className="space-y-4">

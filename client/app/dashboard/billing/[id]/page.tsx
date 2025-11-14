@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuthStore } from '@/lib/auth-store';
+import { toast } from 'sonner';
 import {
   IndianRupee,
   FileText,
@@ -17,6 +18,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
+  Wallet,
+  Receipt,
+  Info,
 } from 'lucide-react';
 
 interface InvoiceItem {
@@ -78,10 +82,13 @@ function InvoiceDetails() {
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [cashReceived, setCashReceived] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [transactionId, setTransactionId] = useState('');
   const [paymentNotes, setPaymentNotes] = useState('');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [submitting, setSubmitting] = useState(false);
+  const [payments, setPayments] = useState<Payment[]>([]);
 
   useEffect(() => {
     fetchInvoice();
@@ -114,12 +121,25 @@ function InvoiceDetails() {
     
     const amount = parseFloat(paymentAmount);
     if (!amount || amount <= 0) {
-      alert('Please enter a valid amount');
+      toast.error('Please enter a valid amount');
       return;
     }
 
     if (invoice && amount > invoice.balanceAmount) {
-      alert('Payment amount cannot exceed balance amount');
+      toast.error(`Payment amount cannot exceed balance amount of ₹${invoice.balanceAmount.toLocaleString()}`);
+      return;
+    }
+
+    if (paymentMethod === 'CASH' && cashReceived) {
+      const received = parseFloat(cashReceived);
+      if (received < amount) {
+        toast.error('Cash received cannot be less than payment amount');
+        return;
+      }
+    }
+
+    if (paymentMethod !== 'CASH' && !transactionId) {
+      toast.error('Transaction ID is required for non-cash payments');
       return;
     }
 
@@ -136,25 +156,43 @@ function InvoiceDetails() {
           paymentMethod,
           transactionId: transactionId || undefined,
           notes: paymentNotes || undefined,
+          paymentDate,
         }),
       });
 
       if (response.ok) {
-        alert('Payment recorded successfully!');
+        toast.success('Payment recorded successfully!');
         setShowPaymentModal(false);
+        // Reset form
         setPaymentAmount('');
+        setCashReceived('');
         setTransactionId('');
         setPaymentNotes('');
+        setPaymentMethod('CASH');
+        setPaymentDate(new Date().toISOString().split('T')[0]);
         fetchInvoice();
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to record payment');
+        toast.error(error.message || 'Failed to record payment');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error recording payment');
+      toast.error('Error recording payment');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const calculateChange = () => {
+    if (!cashReceived || !paymentAmount) return 0;
+    const received = parseFloat(cashReceived);
+    const amount = parseFloat(paymentAmount);
+    return received > amount ? received - amount : 0;
+  };
+
+  const setFullPayment = () => {
+    if (invoice) {
+      setPaymentAmount(invoice.balanceAmount.toString());
     }
   };
 
@@ -398,14 +436,62 @@ function InvoiceDetails() {
 
       {/* Payment Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold mb-6">Record Payment</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <Wallet className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Record Payment</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Invoice: {invoice?.invoiceNumber}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Balance Info Card */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 mb-6 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Outstanding Balance</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    ₹{invoice?.balanceAmount.toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={setFullPayment}
+                  className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Pay Full
+                </button>
+              </div>
+            </div>
 
             <form onSubmit={handleRecordPayment}>
-              <div className="space-y-4">
+              <div className="space-y-5">
+                {/* Payment Date */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Payment Date *
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Amount */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Payment Amount *
                   </label>
                   <div className="relative">
@@ -415,78 +501,145 @@ function InvoiceDetails() {
                       step="0.01"
                       value={paymentAmount}
                       onChange={(e) => setPaymentAmount(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="0.00"
                       required
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Maximum: ₹{invoice?.balanceAmount.toLocaleString()}
-                  </p>
+                  {paymentAmount && parseFloat(paymentAmount) > (invoice?.balanceAmount || 0) && (
+                    <div className="flex items-center gap-1 mt-1 text-xs text-red-600 dark:text-red-400">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Amount exceeds balance</span>
+                    </div>
+                  )}
                 </div>
 
+                {/* Payment Method */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Payment Method *
                   </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="CASH">Cash</option>
-                    <option value="CARD">Card</option>
-                    <option value="UPI">UPI</option>
-                    <option value="ONLINE">Online Transfer</option>
-                    <option value="CHEQUE">Cheque</option>
-                  </select>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'CASH', label: 'Cash', icon: Wallet },
+                      { value: 'CARD', label: 'Card', icon: CreditCard },
+                      { value: 'UPI', label: 'UPI', icon: Receipt },
+                      { value: 'ONLINE', label: 'Online', icon: CreditCard },
+                      { value: 'CHEQUE', label: 'Cheque', icon: FileText },
+                    ].map((method) => (
+                      <button
+                        key={method.value}
+                        type="button"
+                        onClick={() => setPaymentMethod(method.value)}
+                        className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all ${
+                          paymentMethod === method.value
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        <method.icon className="w-4 h-4" />
+                        <span className="font-medium text-sm">{method.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
+                {/* Cash Received and Change */}
+                {paymentMethod === 'CASH' && paymentAmount && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Cash Received
+                      </label>
+                      <div className="relative">
+                        <IndianRupee className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={cashReceived}
+                          onChange={(e) => setCashReceived(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+                    {cashReceived && calculateChange() > 0 && (
+                      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-green-800 dark:text-green-300">Change to Return:</span>
+                          <span className="text-lg font-bold text-green-900 dark:text-green-200">
+                            ₹{calculateChange().toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Transaction ID for non-cash */}
                 {paymentMethod !== 'CASH' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Transaction ID
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Transaction ID / Reference Number *
                     </label>
                     <input
                       type="text"
                       value={transactionId}
                       onChange={(e) => setTransactionId(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter transaction/reference number"
+                      required
                     />
                   </div>
                 )}
 
+                {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Notes
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Payment Notes
                   </label>
                   <textarea
                     value={paymentNotes}
                     onChange={(e) => setPaymentNotes(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     rows={3}
                     placeholder="Additional notes (optional)"
                   />
                 </div>
               </div>
 
-              <div className="flex space-x-3 mt-6">
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
-                  onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    setShowPaymentModal(false);
+                    setPaymentAmount('');
+                    setCashReceived('');
+                    setTransactionId('');
+                    setPaymentNotes('');
+                  }}
+                  className="flex-1 px-4 py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
                   disabled={submitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
                   disabled={submitting}
                 >
-                  {submitting ? 'Recording...' : 'Record Payment'}
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Record Payment</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

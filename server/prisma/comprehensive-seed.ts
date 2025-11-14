@@ -863,7 +863,7 @@ async function main() {
             'Post-operative care',
             'Severe infection'
           ]),
-          status: isDischarged ? 'DISCHARGED' : randomItem(['ADMITTED', 'UNDER_TREATMENT']) as any,
+          status: isDischarged ? 'DISCHARGED' : 'ADMITTED',
           dischargeDate: isDischarged ? randomDate(admissionDate, new Date()) : null,
           dischargeSummary: isDischarged ? 'Patient discharged in stable condition' : null,
         },

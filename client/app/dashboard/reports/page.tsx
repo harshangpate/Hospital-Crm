@@ -88,14 +88,17 @@ function ReportsContent() {
     setLoading(true);
     try {
       // Fetch various stats from different endpoints
-      const [invoicesRes, appointmentsRes, prescriptionsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/v1/invoices', {
+      const [invoicesRes, appointmentsRes, prescriptionsRes, patientsRes] = await Promise.all([
+        fetch('http://localhost:5000/api/v1/invoices?limit=1000', {
           headers: { Authorization: `Bearer ${token}` },
         }).catch(() => null),
-        fetch('http://localhost:5000/api/v1/appointments', {
+        fetch('http://localhost:5000/api/v1/appointments?limit=1000', {
           headers: { Authorization: `Bearer ${token}` },
         }).catch(() => null),
-        fetch('http://localhost:5000/api/v1/prescriptions', {
+        fetch('http://localhost:5000/api/v1/prescriptions?limit=1000', {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+        fetch('http://localhost:5000/api/v1/users?role=PATIENT&limit=1000', {
           headers: { Authorization: `Bearer ${token}` },
         }).catch(() => null),
       ]);
@@ -141,12 +144,15 @@ function ReportsContent() {
             ...prev,
             totalPrescriptions: prescriptionsData.data.length,
           }));
-          
-          // Count unique patients from prescriptions
-          const uniquePatients = new Set(
-            prescriptionsData.data.map((p: any) => p.patientId)
-          );
-          totalPatients = uniquePatients.size;
+        }
+      }
+
+      // Handle patients data
+      if (patientsRes && patientsRes.ok) {
+        const patientsData = await patientsRes.json();
+        if (patientsData.success) {
+          const patients = Array.isArray(patientsData.data) ? patientsData.data : (patientsData.data.users || []);
+          totalPatients = patients.length;
         }
       }
 

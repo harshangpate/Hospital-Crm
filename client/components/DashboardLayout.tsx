@@ -102,13 +102,13 @@ const menuItems: MenuItem[] = [
   {
     icon: Users,
     label: 'Patients',
-    href: '/dashboard/patients',
+    href: '/dashboard/reception/patients',
     roles: ['DOCTOR', 'NURSE', 'RECEPTIONIST', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
     icon: Activity,
     label: 'Doctors',
-    href: '/dashboard/doctors',
+    href: '/dashboard/reception/doctors',
     roles: ['RECEPTIONIST', 'ADMIN', 'SUPER_ADMIN'],
   },
   {
@@ -368,33 +368,32 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </motion.div>
 
-          {/* User info */}
+          {/* User info - Modern Card Design */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-6 mx-4 p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg relative overflow-hidden group"
+            className="mt-6 mx-4"
           >
-            {/* Animated background */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            />
-            <div className="relative flex items-center">
-              <motion.div 
-                className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30"
-                whileHover={{ scale: 1.1, rotate: 360 }}
-                transition={{ duration: 0.5 }}
-              >
-                <User className="w-6 h-6 text-white" />
-              </motion.div>
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs text-white/90 capitalize flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  {user?.role.replace('_', ' ').toLowerCase()}
-                </p>
+            <div className="bg-gray-800/50 dark:bg-gray-800/30 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300 group">
+              <div className="flex items-center gap-3">
+                <motion.div 
+                  className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shrink-0"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <User className="w-6 h-6 text-white" />
+                </motion.div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-white truncate">
+                    {user?.firstName} {user?.lastName}
+                  </h3>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      {user?.role.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -723,7 +722,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="sticky top-0 z-10 flex h-20 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm transition-colors duration-300"
+          className="sticky top-0 z-50 flex h-20 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm transition-colors duration-300"
         >
           <button
             type="button"

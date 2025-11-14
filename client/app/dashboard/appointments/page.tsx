@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardLayout from '@/components/DashboardLayout';
 import AnimatedCard from '@/components/ui/AnimatedCard';
-import { Calendar, Clock, User, Search, Filter, Plus, X, Edit, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, User, Search, Filter, Plus, X, Edit, CheckCircle, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAppointments, cancelAppointment } from '@/lib/api/appointments';
 import { useAuthStore } from '@/lib/auth-store';
@@ -100,6 +100,20 @@ export default function AppointmentsPage() {
     }
   };
 
+  const handleStatusUpdate = async (id: string, status: string) => {
+    try {
+      const { updateAppointmentStatus } = await import('@/lib/api/appointments');
+      const response = await updateAppointmentStatus(id, { status: status as any });
+      
+      if (response.success) {
+        toast.success(`Appointment ${status.toLowerCase()} successfully`);
+        loadAppointments();
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update appointment');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig: any = {
       SCHEDULED: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Scheduled' },
@@ -149,7 +163,7 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['PATIENT', 'DOCTOR', 'RECEPTIONIST', 'ADMIN']}>
+    <ProtectedRoute allowedRoles={['PATIENT', 'DOCTOR', 'RECEPTIONIST', 'ADMIN', 'SUPER_ADMIN']}>
       <DashboardLayout>
         <div className="space-y-6">
           {/* Header */}
@@ -170,7 +184,7 @@ export default function AppointmentsPage() {
           </div>
 
           {/* Filters and Search */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="bg-white/5 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/20 dark:border-gray-700/50 p-4">
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search */}
               <div className="flex-1 relative">
@@ -217,18 +231,18 @@ export default function AppointmentsPage() {
 
           {/* Appointments List */}
           {isLoading ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
+            <div className="bg-white/5 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/20 dark:border-gray-700/50 p-12">
               <div className="flex flex-col items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-                <p className="text-gray-600">Loading appointments...</p>
+                <p className="text-gray-600 dark:text-gray-300">Loading appointments...</p>
               </div>
             </div>
           ) : filteredAppointments.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
+            <div className="bg-white/5 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/20 dark:border-gray-700/50 p-12">
               <div className="text-center">
-                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No appointments found</h3>
-                <p className="text-gray-600 mb-6">
+                <Calendar className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No appointments found</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
                   {searchQuery
                     ? 'Try adjusting your search criteria'
                     : 'You have no appointments scheduled yet'}
@@ -253,7 +267,7 @@ export default function AppointmentsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ scale: 1.01, translateY: -2 }}
-                  className="bg-gradient-to-r from-white to-gray-50 rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300"
+                  className="bg-white/5 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/20 dark:border-gray-700/50 p-6 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-500 transition-all duration-300"
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     {/* Appointment Info */}
@@ -301,7 +315,8 @@ export default function AppointmentsPage() {
 
                     {/* Actions */}
                     <div className="flex lg:flex-col gap-2">
-                      {canCancelOrReschedule(appointment) && (
+                      {/* Patient actions */}
+                      {user?.role === 'PATIENT' && canCancelOrReschedule(appointment) && (
                         <>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -337,7 +352,57 @@ export default function AppointmentsPage() {
                           </motion.button>
                         </>
                       )}
-                      {appointment.status === 'COMPLETED' && (
+                      
+                      {/* Doctor actions */}
+                      {user?.role === 'DOCTOR' && (
+                        <>
+                          {appointment.status === 'SCHEDULED' && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleStatusUpdate(appointment.id, 'CONFIRMED')}
+                              className="flex-1 lg:flex-none inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm font-medium shadow-sm"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Confirm
+                            </motion.button>
+                          )}
+                          {['SCHEDULED', 'CONFIRMED'].includes(appointment.status) && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleStatusUpdate(appointment.id, 'IN_PROGRESS')}
+                              className="flex-1 lg:flex-none inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium shadow-sm"
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Start Consultation
+                            </motion.button>
+                          )}
+                          {appointment.status === 'IN_PROGRESS' && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleStatusUpdate(appointment.id, 'COMPLETED')}
+                              className="flex-1 lg:flex-none inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-medium shadow-sm"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Complete
+                            </motion.button>
+                          )}
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => router.push(`/dashboard/appointments/${appointment.id}`)}
+                            className="flex-1 lg:flex-none inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all text-sm font-medium shadow-sm"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </motion.button>
+                        </>
+                      )}
+                      
+                      {/* View Details for completed appointments */}
+                      {appointment.status === 'COMPLETED' && user?.role === 'PATIENT' && (
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
