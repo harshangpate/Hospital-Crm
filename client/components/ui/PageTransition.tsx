@@ -71,9 +71,9 @@ export function NavigationProgress() {
 
     const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 90) {
+        if (prev >= 95) {
           clearInterval(interval);
-          return 90;
+          return 95;
         }
         return prev + 10;
       });
@@ -83,8 +83,9 @@ export function NavigationProgress() {
       setProgress(100);
       setTimeout(() => {
         setIsLoading(false);
-      }, 200);
-    }, 500);
+        setProgress(0);
+      }, 300);
+    }, 400);
 
     return () => {
       clearInterval(interval);
