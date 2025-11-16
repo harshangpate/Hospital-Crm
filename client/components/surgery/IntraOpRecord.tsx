@@ -68,8 +68,11 @@ export default function IntraOpRecord({ surgeryId }: { surgeryId: string }) {
       setLoading(true);
       const response = await getIntraOpRecord(surgeryId);
       setRecord(response.data || getInitialRecordData());
-    } catch (error) {
-      console.error('Error fetching intra-op record:', error);
+    } catch (error: any) {
+      // 404 is expected for surgeries without an intra-op record yet
+      if (error?.response?.status !== 404) {
+        console.error('Error fetching intra-op record:', error);
+      }
       setRecord(getInitialRecordData());
     } finally {
       setLoading(false);
@@ -118,12 +121,54 @@ export default function IntraOpRecord({ surgeryId }: { surgeryId: string }) {
     
     try {
       setSaving(true);
-      await updateIntraOpRecord(surgeryId, record);
+      
+      // Map frontend field names to backend/database field names
+      const mappedData: any = {
+        patientInOTAt: record.patientInOtTime,
+        anesthesiaStartAt: record.anesthesiaStartTime,
+        incisionAt: record.surgeryStartTime,
+        procedureStartAt: record.surgeryStartTime,
+        procedureEndAt: record.surgeryEndTime,
+        closureAt: record.surgeryEndTime,
+        patientOutOTAt: record.patientOutOtTime,
+        anesthesiaType: record.anesthesiaType,
+        anesthesiaDrugsUsed: record.anesthesiaDrugsUsed,
+        anesthesiaComplications: record.anesthesiaComplications,
+        ivFluidsGiven: record.ivFluidsGiven,
+        bloodTransfused: record.bloodTransfused,
+        bloodLossEstimate: record.bloodLoss,
+        urineOutput: record.urineOutput,
+        position: record.patientPosition,
+        surgicalApproach: record.surgicalApproach,
+        findings: record.findingsDuringProcedure,
+        procedurePerformed: record.procedurePerformed,
+        specimenSent: record.specimensSent,
+        implantUsed: record.implantsUsed,
+        implantBatchNumber: record.implantBatchNumbers,
+        swabCountCorrect: record.countsVerified,
+        instrumentCountCorrect: record.countsVerified,
+        needleCountCorrect: record.countsVerified,
+        vitalSigns: record.vitals && record.vitals.length > 0 ? record.vitals : null,
+        surgeonNotes: record.surgeonNotes,
+        anesthesiaNotes: record.anesthesiaNotes,
+        nursingNotes: record.nursingNotes,
+      };
+      
+      // Remove undefined/null values to avoid sending unnecessary data
+      Object.keys(mappedData).forEach(key => {
+        if (mappedData[key] === undefined || mappedData[key] === null || mappedData[key] === '') {
+          delete mappedData[key];
+        }
+      });
+      
+      console.log('Saving intra-op record:', mappedData);
+      await updateIntraOpRecord(surgeryId, mappedData);
       setSuccessMessage('Record saved successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving record:', error);
-      alert('Failed to save record');
+      console.error('Error response:', error?.response?.data);
+      alert(`Failed to save record: ${error?.response?.data?.message || error.message}`);
     } finally {
       setSaving(false);
     }
@@ -224,7 +269,8 @@ export default function IntraOpRecord({ surgeryId }: { surgeryId: string }) {
 
         {/* Vitals Table */}
         <div className="space-y-4">
-          {record?.vitals.map((vital, index) => (
+          {record?.vitals && record.vitals.length > 0 ? (
+            record.vitals.map((vital, index) => (
             <div key={index} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
                 <h5 className="font-medium text-gray-900 dark:text-white">Reading #{index + 1}</h5>
@@ -316,7 +362,12 @@ export default function IntraOpRecord({ surgeryId }: { surgeryId: string }) {
                 </div>
               </div>
             </div>
-          ))}
+          ))
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No vital signs recorded yet. Click "Add Vital Sign Reading" to start.
+            </div>
+          )}
         </div>
       </div>
 
