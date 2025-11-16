@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { DollarSign, Plus, Trash2, Save, Download, Calculator } from 'lucide-react';
+import { createInvoice } from '@/lib/api/invoices';
+import { useAuthStore } from '@/lib/auth-store';
 
 interface BillingItem {
   id: string;
@@ -44,6 +46,7 @@ const BILLING_CATEGORIES = [
 ];
 
 export default function SurgeryBilling({ surgeryId, surgeryDetails }: { surgeryId: string; surgeryDetails?: any }) {
+  const { token } = useAuthStore();
   const [billingData, setBillingData] = useState<BillingData>({
     surgeryId,
     items: [],
@@ -58,12 +61,36 @@ export default function SurgeryBilling({ surgeryId, surgeryDetails }: { surgeryI
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [hasExistingInvoice, setHasExistingInvoice] = useState(false);
+  const [existingInvoiceNumber, setExistingInvoiceNumber] = useState<string>('');
 
   useEffect(() => {
     if (surgeryDetails) {
+      checkExistingInvoice();
       generateAutoBilling();
     }
   }, [surgeryDetails]);
+
+  const checkExistingInvoice = async () => {
+    try {
+      if (!surgeryDetails?.patient?.id) return;
+      
+      const { getInvoices } = await import('@/lib/api/invoices');
+      const response = await getInvoices({ patientId: surgeryDetails.patient.id });
+      
+      // Check if any invoice has notes mentioning this surgery number
+      const existingInvoice = response.data.invoices?.find((inv: any) => 
+        inv.notes?.includes(surgeryDetails.surgeryNumber)
+      );
+      
+      if (existingInvoice) {
+        setHasExistingInvoice(true);
+        setExistingInvoiceNumber(existingInvoice.invoiceNumber);
+      }
+    } catch (error) {
+      console.error('Error checking existing invoice:', error);
+    }
+  };
 
   const generateAutoBilling = () => {
     const autoItems: BillingItem[] = [];
@@ -150,11 +177,14 @@ export default function SurgeryBilling({ surgeryId, surgeryDetails }: { surgeryI
       total: 8000,
     });
 
-    setBillingData((prev) => ({
-      ...prev,
-      items: autoItems,
-    }));
-    calculateTotals(autoItems, prev.discount, prev.discountType, prev.taxRate, prev.insuranceCoverage);
+    setBillingData((prev) => {
+      const updatedData = {
+        ...prev,
+        items: autoItems,
+      };
+      calculateTotals(autoItems, prev.discount, prev.discountType, prev.taxRate, prev.insuranceCoverage);
+      return updatedData;
+    });
   };
 
   const calculateTotals = (
@@ -182,7 +212,8 @@ export default function SurgeryBilling({ surgeryId, surgeryDetails }: { surgeryI
       ...prev,
       items,
       subtotal,
-      discount: discountAmount,
+      discount, // Store the original discount value, not the calculated amount
+      discountType,
       tax: taxAmount,
       total,
       patientCopay: Math.max(0, patientCopay),
@@ -241,12 +272,48 @@ export default function SurgeryBilling({ surgeryId, surgeryDetails }: { surgeryI
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Save billing data via API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert('Billing saved successfully!');
-    } catch (error) {
+      if (!token) {
+        alert('Please login to save billing');
+        return;
+      }
+
+      if (!surgeryDetails?.patient?.id) {
+        alert('Patient information is required');
+        return;
+      }
+
+      // Prepare invoice data (send as 'any' to bypass TypeScript interface mismatch)
+      const discountAmount = billingData.discountType === 'percentage' 
+        ? (billingData.subtotal * billingData.discount / 100)
+        : billingData.discount;
+      const taxAmount = (billingData.subtotal - discountAmount) * billingData.taxRate / 100;
+      
+      const invoiceData: any = {
+        patientId: surgeryDetails.patient.id,
+        invoiceItems: billingData.items.map(item => ({
+          itemType: item.category,
+          itemName: item.description,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.quantity * item.unitPrice,
+        })),
+        // Backend expects discount and tax as amounts
+        discount: discountAmount,
+        tax: taxAmount,
+        notes: `Surgery: ${surgeryDetails.surgeryName} (${surgeryDetails.surgeryNumber})`,
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+      };
+
+      console.log('Creating invoice with data:', invoiceData);
+      const response = await createInvoice(invoiceData);
+      setHasExistingInvoice(true);
+      setExistingInvoiceNumber(response.data.invoiceNumber);
+      alert(`Invoice created successfully! Invoice Number: ${response.data.invoiceNumber}`);
+    } catch (error: any) {
       console.error('Error saving billing:', error);
-      alert('Failed to save billing');
+      console.error('Error response:', error?.response?.data);
+      alert(`Failed to save billing: ${error?.response?.data?.message || error.message}`);
     } finally {
       setSaving(false);
     }
@@ -400,7 +467,7 @@ export default function SurgeryBilling({ surgeryId, surgeryDetails }: { surgeryI
             <div className="flex gap-2">
               <input
                 type="number"
-                value={billingData.discountType === 'percentage' ? (billingData.discount / billingData.subtotal * 100) : billingData.discount}
+                value={billingData.discount}
                 onChange={(e) => handleDiscountChange(parseFloat(e.target.value) || 0, billingData.discountType)}
                 min="0"
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -462,7 +529,7 @@ export default function SurgeryBilling({ surgeryId, surgeryDetails }: { surgeryI
             <div className="flex justify-between text-gray-700 dark:text-gray-300">
               <span>Discount:</span>
               <span className="font-medium text-red-600 dark:text-red-400">
-                - ₹{billingData.discount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                - ₹{((billingData.discountType === 'percentage' ? (billingData.subtotal * billingData.discount / 100) : billingData.discount)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
             <div className="flex justify-between text-gray-700 dark:text-gray-300">
@@ -498,26 +565,32 @@ export default function SurgeryBilling({ surgeryId, surgeryDetails }: { surgeryI
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-4">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleSave}
-          disabled={saving}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-        >
-          <Save className="w-5 h-5" />
-          {saving ? 'Saving...' : 'Save Billing'}
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleGenerateInvoice}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-        >
-          <Download className="w-5 h-5" />
-          Generate Invoice
-        </motion.button>
+      <div className="space-y-4">
+        {hasExistingInvoice && (
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="flex items-center gap-2 text-green-800 dark:text-green-300">
+              <Save className="w-5 h-5" />
+              <span className="font-medium">
+                Invoice already created: {existingInvoiceNumber}
+              </span>
+            </div>
+            <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+              An invoice has already been generated for this surgery. View it in the Billing section.
+            </p>
+          </div>
+        )}
+        <div className="flex justify-end gap-4">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleSave}
+            disabled={saving || billingData.items.length === 0 || hasExistingInvoice}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <Save className="w-5 h-5" />
+            {saving ? 'Creating Invoice...' : hasExistingInvoice ? 'Invoice Already Created' : 'Generate & Save Invoice'}
+          </motion.button>
+        </div>
       </div>
     </div>
   );
