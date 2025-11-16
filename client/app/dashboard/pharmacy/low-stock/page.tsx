@@ -39,16 +39,20 @@ export default function LowStockPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/v1/pharmacy/inventory', {
+      const response = await fetch('http://localhost:5000/api/v1/pharmacy/inventory?limit=1000', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
-      if (data.success) {
+      if (data.success && data.data) {
+        // Filter items where quantity <= reorderLevel
         const lowStock = data.data.filter((m: Medicine) => m.quantity <= m.reorderLevel);
         setMedicines(lowStock);
+      } else {
+        setMedicines([]);
       }
     } catch (error) {
       console.error('Error fetching low stock items:', error);
+      setMedicines([]);
     } finally {
       setLoading(false);
     }
