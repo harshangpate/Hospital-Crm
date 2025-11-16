@@ -81,21 +81,30 @@ function ReportsContent() {
     start.setDate(start.getDate() - 30);
     setStartDate(start.toISOString().split('T')[0]);
     setEndDate(end.toISOString().split('T')[0]);
-    fetchReportStats();
   }, []);
+
+  useEffect(() => {
+    // Refetch data when date range changes
+    if (startDate && endDate) {
+      fetchReportStats();
+    }
+  }, [startDate, endDate]);
 
   const fetchReportStats = async () => {
     setLoading(true);
     try {
+      // Build query parameters with date range
+      const dateParams = startDate && endDate ? `&startDate=${startDate}&endDate=${endDate}` : '';
+      
       // Fetch various stats from different endpoints
       const [invoicesRes, appointmentsRes, prescriptionsRes, patientsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/v1/invoices?limit=1000', {
+        fetch(`http://localhost:5000/api/v1/invoices?limit=1000${dateParams}`, {
           headers: { Authorization: `Bearer ${token}` },
         }).catch(() => null),
-        fetch('http://localhost:5000/api/v1/appointments?limit=1000', {
+        fetch(`http://localhost:5000/api/v1/appointments?limit=1000${dateParams}`, {
           headers: { Authorization: `Bearer ${token}` },
         }).catch(() => null),
-        fetch('http://localhost:5000/api/v1/prescriptions?limit=1000', {
+        fetch(`http://localhost:5000/api/v1/prescriptions?limit=1000${dateParams}`, {
           headers: { Authorization: `Bearer ${token}` },
         }).catch(() => null),
         fetch('http://localhost:5000/api/v1/users?role=PATIENT&limit=1000', {
@@ -108,12 +117,13 @@ function ReportsContent() {
       let pendingPayments = 0;
       if (invoicesRes && invoicesRes.ok) {
         const invoicesData = await invoicesRes.json();
-        if (invoicesData.success && Array.isArray(invoicesData.data)) {
-          totalRevenue = invoicesData.data.reduce(
+        if (invoicesData.success && invoicesData.data && Array.isArray(invoicesData.data.invoices)) {
+          const invoices = invoicesData.data.invoices;
+          totalRevenue = invoices.reduce(
             (sum: number, inv: any) => sum + (inv.totalAmount || 0),
             0
           );
-          pendingPayments = invoicesData.data
+          pendingPayments = invoices
             .filter((inv: any) => inv.paymentStatus !== 'PAID')
             .reduce((sum: number, inv: any) => sum + (inv.totalAmount || 0), 0);
         }
@@ -1166,8 +1176,10 @@ Low Stock Items,${stats.lowStockItems}
   const handleDateRangeChange = (days: string) => {
     setDateRange(days);
     const end = new Date();
+    end.setHours(23, 59, 59, 999); // Set to end of day
     const start = new Date();
     start.setDate(start.getDate() - parseInt(days));
+    start.setHours(0, 0, 0, 0); // Set to beginning of day
     setStartDate(start.toISOString().split('T')[0]);
     setEndDate(end.toISOString().split('T')[0]);
   };
@@ -1205,6 +1217,16 @@ Low Stock Items,${stats.lowStockItems}
                 <span className="font-medium text-gray-700">Date Range:</span>
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={() => handleDateRangeChange('0')}
+                  className={`px-4 py-2 rounded-lg transition ${
+                    dateRange === '0'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Today
+                </button>
                 {['7', '30', '90', '365'].map((days) => (
                   <button
                     key={days}
