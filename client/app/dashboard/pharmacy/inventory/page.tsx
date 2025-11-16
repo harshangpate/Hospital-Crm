@@ -592,8 +592,8 @@ export default function InventoryPage() {
                         </label>
                         <input
                           type="number"
-                          value={addForm.quantity}
-                          onChange={(e) => setAddForm({...addForm, quantity: parseInt(e.target.value)})}
+                          value={addForm.quantity || ''}
+                          onChange={(e) => setAddForm({...addForm, quantity: e.target.value === '' ? '' as any : parseInt(e.target.value)})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -604,8 +604,8 @@ export default function InventoryPage() {
                         </label>
                         <input
                           type="number"
-                          value={addForm.reorderLevel}
-                          onChange={(e) => setAddForm({...addForm, reorderLevel: parseInt(e.target.value)})}
+                          value={addForm.reorderLevel || ''}
+                          onChange={(e) => setAddForm({...addForm, reorderLevel: e.target.value === '' ? '' as any : parseInt(e.target.value)})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -619,8 +619,8 @@ export default function InventoryPage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={addForm.unitCost}
-                          onChange={(e) => setAddForm({...addForm, unitCost: parseFloat(e.target.value)})}
+                          value={addForm.unitCost || ''}
+                          onChange={(e) => setAddForm({...addForm, unitCost: e.target.value === '' ? '' as any : parseFloat(e.target.value)})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -632,8 +632,8 @@ export default function InventoryPage() {
                         <input
                           type="number"
                           step="0.01"
-                          value={addForm.sellingPrice}
-                          onChange={(e) => setAddForm({...addForm, sellingPrice: parseFloat(e.target.value)})}
+                          value={addForm.sellingPrice || ''}
+                          onChange={(e) => setAddForm({...addForm, sellingPrice: e.target.value === '' ? '' as any : parseFloat(e.target.value)})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
