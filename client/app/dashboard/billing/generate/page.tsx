@@ -70,14 +70,26 @@ function GenerateBill() {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/api/v1/patients?search=${searchTerm}&limit=10`,
+        `http://localhost:5000/api/v1/users?role=PATIENT&search=${searchTerm}&limit=10`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       if (response.ok) {
         const result = await response.json();
-        setPatients(result.data || []);
+        // Access users array from data.users
+        const users = result.data?.users || [];
+        // Transform user data to patient format
+        const patientData = users.map((user: any) => ({
+          id: user.patient?.id || user.id,
+          patientId: user.patient?.patientId || 'N/A',
+          user: {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+          }
+        }));
+        setPatients(patientData);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -156,10 +168,8 @@ function GenerateBill() {
         body: JSON.stringify({
           patientId: selectedPatient.id,
           items: items.map(({ tempId, ...item }) => item),
-          subtotal,
-          discount: discountAmount,
-          tax: taxAmount,
-          totalAmount: total,
+          discount: discount, // Send percentage, not amount
+          tax: tax, // Send percentage, not amount
           notes,
         }),
       });
@@ -199,13 +209,13 @@ function GenerateBill() {
             </h2>
             
             {selectedPatient ? (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex justify-between items-center">
+              <div className="bg-gray-800 dark:bg-gray-700 border border-gray-600 dark:border-gray-500 rounded-lg p-4 flex justify-between items-center">
                 <div>
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-white dark:text-gray-100">
                     {selectedPatient.user.firstName} {selectedPatient.user.lastName}
                   </p>
-                  <p className="text-sm text-gray-600">ID: {selectedPatient.patientId}</p>
-                  <p className="text-sm text-gray-600">Phone: {selectedPatient.user.phone}</p>
+                  <p className="text-sm text-gray-300 dark:text-gray-400">ID: {selectedPatient.patientId}</p>
+                  <p className="text-sm text-gray-300 dark:text-gray-400">Phone: {selectedPatient.user.phone}</p>
                 </div>
                 <button
                   type="button"
