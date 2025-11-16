@@ -22,6 +22,7 @@ import {
   getIntraOpRecord,
   getPostOpRecord
 } from '@/lib/api/surgery';
+import DashboardLayout from '@/components/DashboardLayout';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import PreOpChecklistComponent from '@/components/surgery/PreOpChecklist';
 import IntraOpRecordComponent from '@/components/surgery/IntraOpRecord';
@@ -35,6 +36,7 @@ export default function SurgeryDetailsPage() {
   const [surgery, setSurgery] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'details' | 'pre-op' | 'intra-op' | 'post-op' | 'billing'>('details');
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     if (surgeryId) {
@@ -51,6 +53,24 @@ export default function SurgeryDetailsPage() {
       console.error('Error fetching surgery details:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (newStatus: string) => {
+    if (!confirm(`Are you sure you want to change status to ${newStatus.replace('_', ' ')}?`)) {
+      return;
+    }
+
+    try {
+      setUpdatingStatus(true);
+      await updateSurgeryStatus(surgeryId, { status: newStatus });
+      await fetchSurgeryDetails(); // Refresh data
+      alert(`Surgery status updated to ${newStatus.replace('_', ' ')}`);
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      alert(`Failed to update status: ${error?.response?.data?.message || error.message}`);
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -79,36 +99,41 @@ export default function SurgeryDetailsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading surgery details...</p>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading surgery details...</p>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   if (!surgery) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Surgery Not Found
-          </h2>
-          <button
-            onClick={() => window.history.back()}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Go Back
-          </button>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Surgery Not Found
+            </h2>
+            <button
+              onClick={() => window.history.back()}
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -140,6 +165,57 @@ export default function SurgeryDetailsPage() {
           </span>
         </div>
       </motion.div>
+
+      {/* Status Action Buttons */}
+      {surgery.status !== 'COMPLETED' && surgery.status !== 'CANCELLED' && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
+        >
+          <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Quick Actions:
+          </span>
+          <div className="flex gap-2 ml-auto">
+            {surgery.status === 'SCHEDULED' && (
+              <button
+                onClick={() => handleStatusUpdate('IN_PROGRESS')}
+                disabled={updatingStatus}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                <Activity className="w-4 h-4" />
+                {updatingStatus ? 'Starting...' : 'Start Surgery'}
+              </button>
+            )}
+            {surgery.status === 'IN_PROGRESS' && (
+              <button
+                onClick={() => handleStatusUpdate('COMPLETED')}
+                disabled={updatingStatus}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                {updatingStatus ? 'Completing...' : 'Complete Surgery'}
+              </button>
+            )}
+            {(surgery.status === 'SCHEDULED' || surgery.status === 'IN_PROGRESS') && (
+              <button
+                onClick={() => {
+                  const reason = prompt('Enter cancellation reason:');
+                  if (reason) {
+                    handleStatusUpdate('CANCELLED');
+                  }
+                }}
+                disabled={updatingStatus}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                <AlertCircle className="w-4 h-4" />
+                Cancel
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* Tabs */}
       <ScrollReveal variant="fadeInUp">
@@ -334,6 +410,7 @@ export default function SurgeryDetailsPage() {
           </div>
         </div>
       </ScrollReveal>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
