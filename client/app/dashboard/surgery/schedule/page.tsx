@@ -83,14 +83,23 @@ export default function SurgerySchedulerPage() {
           endDate: endDate.toISOString(),
         }),
         getAllOperationTheaters(),
-        getAllUsers({ role: 'DOCTOR' }),
-        getAllUsers({ role: 'PATIENT' }),
+        getAllUsers({ role: 'DOCTOR', limit: 1000 }),
+        getAllUsers({ role: 'PATIENT', limit: 1000 }),
       ]);
 
       setSurgeries(surgeriesData.data || []);
       setOperationTheaters(otsData.data || []);
-      setDoctors(doctorsData.data || []);
-      setPatients(patientsData.data || []);
+      
+      // Handle nested data structure from API
+      const doctorsList = Array.isArray(doctorsData.data) 
+        ? doctorsData.data 
+        : (doctorsData.data?.users || []);
+      setDoctors(doctorsList);
+      
+      const patientsList = Array.isArray(patientsData.data) 
+        ? patientsData.data 
+        : (patientsData.data?.users || []);
+      setPatients(patientsList);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -100,7 +109,8 @@ export default function SurgerySchedulerPage() {
 
   const getTimeSlots = () => {
     const slots = [];
-    for (let hour = 8; hour <= 20; hour++) {
+    // Start from midnight (00:00) to cover overnight surgeries
+    for (let hour = 0; hour <= 23; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
       slots.push(`${hour.toString().padStart(2, '0')}:30`);
     }
@@ -108,13 +118,42 @@ export default function SurgerySchedulerPage() {
   };
 
   const getSurgeriesForOTAndTime = (otId: string, timeSlot: string) => {
-    return surgeries.filter(surgery => {
-      const surgeryStart = new Date(surgery.scheduledStartTime);
-      const surgeryHour = surgeryStart.getHours();
-      const surgeryMinute = surgeryStart.getMinutes();
-      const surgeryTime = `${surgeryHour.toString().padStart(2, '0')}:${surgeryMinute.toString().padStart(2, '0')}`;
+    const filtered = surgeries.filter(surgery => {
+      if (surgery.operationTheater.id !== otId) return false;
       
-      return surgery.operationTheater.id === otId && surgeryTime === timeSlot;
+      const surgeryStart = new Date(surgery.scheduledStartTime);
+      const surgeryEnd = new Date(surgery.scheduledEndTime);
+      
+      // Add 2 hours cleanup time after surgery
+      const cleanupEnd = new Date(surgeryEnd);
+      cleanupEnd.setHours(cleanupEnd.getHours() + 2);
+      
+      // Parse the time slot (e.g., "22:00")
+      const [slotHour, slotMinute] = timeSlot.split(':').map(Number);
+      
+      // Create slot time for the current selected date
+      const slotTime = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), slotHour, slotMinute, 0, 0);
+      
+      // Create slot end time (30 minutes later)
+      const slotEndTime = new Date(slotTime);
+      slotEndTime.setMinutes(slotEndTime.getMinutes() + 30);
+      
+      // Check if this time slot overlaps with surgery time + cleanup time
+      const overlaps = slotTime < cleanupEnd && slotEndTime > surgeryStart;
+      
+      return overlaps;
+    });
+    
+    // Mark if this is cleanup time vs actual surgery time
+    return filtered.map(surgery => {
+      const surgeryEnd = new Date(surgery.scheduledEndTime);
+      const [slotHour, slotMinute] = timeSlot.split(':').map(Number);
+      const slotTime = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), slotHour, slotMinute, 0, 0);
+      
+      return {
+        ...surgery,
+        isCleanup: slotTime >= surgeryEnd
+      };
     });
   };
 
@@ -253,7 +292,12 @@ export default function SurgerySchedulerPage() {
       </ScrollReveal>
 
       {/* Schedule Grid */}
-      <ScrollReveal variant="fadeInUp" delay={0.2}>
+      <div>
+        {filteredOTs.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <p className="text-gray-500 dark:text-gray-400">No operation theaters available. Please add operation theaters first.</p>
+          </div>
+        ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="overflow-x-auto">
             <div className="min-w-[1000px]">
@@ -262,7 +306,10 @@ export default function SurgerySchedulerPage() {
                 <div className="p-4 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
                   <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Time</p>
                 </div>
-                <div className={`grid grid-cols-${filteredOTs.length} divide-x divide-gray-200 dark:divide-gray-700`}>
+                <div 
+                  className="grid divide-x divide-gray-200 dark:divide-gray-700"
+                  style={{ gridTemplateColumns: `repeat(${filteredOTs.length}, 1fr)` }}
+                >
                   {filteredOTs.map(ot => (
                     <div key={ot.id} className="p-4 bg-gray-50 dark:bg-gray-900">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -290,7 +337,10 @@ export default function SurgerySchedulerPage() {
                         {timeSlot}
                       </p>
                     </div>
-                    <div className={`grid grid-cols-${filteredOTs.length} divide-x divide-gray-200 dark:divide-gray-700`}>
+                    <div 
+                      className="grid divide-x divide-gray-200 dark:divide-gray-700"
+                      style={{ gridTemplateColumns: `repeat(${filteredOTs.length}, 1fr)` }}
+                    >
                       {filteredOTs.map(ot => {
                         const slotSurgeries = getSurgeriesForOTAndTime(ot.id, timeSlot);
                         return (
@@ -301,25 +351,43 @@ export default function SurgerySchedulerPage() {
                                   key={surgery.id}
                                   initial={{ scale: 0.9, opacity: 0 }}
                                   animate={{ scale: 1, opacity: 1 }}
-                                  className={`p-3 rounded-lg ${getPriorityColor(surgery.priority)} cursor-pointer hover:shadow-lg transition-shadow mb-2`}
+                                  className={`p-3 rounded-lg ${
+                                    surgery.isCleanup 
+                                      ? 'bg-gray-400 dark:bg-gray-600 text-white border-2 border-dashed border-gray-500'
+                                      : getPriorityColor(surgery.priority)
+                                  } cursor-pointer hover:shadow-lg transition-shadow mb-2`}
                                   onClick={() => window.location.href = `/dashboard/surgery/${surgery.id}`}
                                 >
-                                  <p className="font-semibold text-sm mb-1">{surgery.surgeryName}</p>
-                                  <p className="text-xs opacity-90">
-                                    {surgery.patient.user.firstName} {surgery.patient.user.lastName}
-                                  </p>
-                                  <p className="text-xs opacity-75 mt-1">
-                                    Dr. {surgery.primarySurgeon.user.firstName} {surgery.primarySurgeon.user.lastName}
-                                  </p>
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <Clock className="w-3 h-3" />
-                                    <span className="text-xs">
-                                      {new Date(surgery.scheduledStartTime).toLocaleTimeString('en-US', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                      })}
-                                    </span>
-                                  </div>
+                                  {surgery.isCleanup ? (
+                                    <>
+                                      <p className="font-semibold text-sm mb-1">🧹 Cleanup & Sterilization</p>
+                                      <p className="text-xs opacity-90">
+                                        Post: {surgery.surgeryName}
+                                      </p>
+                                      <p className="text-xs opacity-75 mt-1">
+                                        OT Reserved for cleaning
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <p className="font-semibold text-sm mb-1">{surgery.surgeryName}</p>
+                                      <p className="text-xs opacity-90">
+                                        {surgery.patient.user.firstName} {surgery.patient.user.lastName}
+                                      </p>
+                                      <p className="text-xs opacity-75 mt-1">
+                                        Dr. {surgery.primarySurgeon.user.firstName} {surgery.primarySurgeon.user.lastName}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-2">
+                                        <Clock className="w-3 h-3" />
+                                        <span className="text-xs">
+                                          {new Date(surgery.scheduledStartTime).toLocaleTimeString('en-US', { 
+                                            hour: '2-digit', 
+                                            minute: '2-digit' 
+                                          })}
+                                        </span>
+                                      </div>
+                                    </>
+                                  )}
                                 </motion.div>
                               ))
                             ) : (
@@ -343,7 +411,8 @@ export default function SurgerySchedulerPage() {
             </div>
           </div>
         </div>
-      </ScrollReveal>
+        )}
+      </div>
 
       {/* Summary Cards */}
       <ScrollReveal variant="fadeInUp" delay={0.3}>
@@ -427,17 +496,53 @@ export default function SurgerySchedulerPage() {
               const formData = new FormData(e.currentTarget);
               
               try {
+                const scheduledDate = formData.get('scheduledDate') as string;
+                const startTimeStr = formData.get('scheduledStartTime') as string;
+                const endTimeStr = formData.get('scheduledEndTime') as string;
+                
+                const startTime = new Date(`${scheduledDate}T${startTimeStr}`);
+                let endTime = new Date(`${scheduledDate}T${endTimeStr}`);
+                
+                // If end time is before start time, it means surgery spans to next day
+                if (endTime <= startTime) {
+                  endTime.setDate(endTime.getDate() + 1);
+                }
+                
+                const otId = formData.get('operationTheaterId') as string;
+                
+                // Add 2 hours cleanup time
+                const cleanupEnd = new Date(endTime);
+                cleanupEnd.setHours(cleanupEnd.getHours() + 2);
+                
+                // Check for conflicts with existing surgeries
+                const hasConflict = surgeries.some(surgery => {
+                  if (surgery.operationTheater.id !== otId) return false;
+                  
+                  const existingStart = new Date(surgery.scheduledStartTime);
+                  const existingEnd = new Date(surgery.scheduledEndTime);
+                  const existingCleanupEnd = new Date(existingEnd);
+                  existingCleanupEnd.setHours(existingCleanupEnd.getHours() + 2);
+                  
+                  // Check if times overlap
+                  return (startTime < existingCleanupEnd && cleanupEnd > existingStart);
+                });
+                
+                if (hasConflict) {
+                  alert('This operation theater is already booked for the selected time (including cleanup time). Please choose a different time or OT.');
+                  return;
+                }
+                
                 const surgeryData: CreateSurgeryData = {
-                  patientId: parseInt(formData.get('patientId') as string),
-                  primarySurgeonId: parseInt(formData.get('primarySurgeonId') as string),
-                  operationTheaterId: parseInt(formData.get('operationTheaterId') as string),
+                  patientId: formData.get('patientId') as string,
+                  primarySurgeonId: formData.get('primarySurgeonId') as string,
+                  operationTheaterId: otId,
                   surgeryName: formData.get('surgeryName') as string,
                   surgeryType: formData.get('surgeryType') as 'ELECTIVE' | 'EMERGENCY' | 'DAY_CARE',
                   description: formData.get('description') as string,
                   diagnosis: formData.get('diagnosis') as string,
-                  scheduledDate: formData.get('scheduledDate') as string,
-                  scheduledStartTime: new Date(`${formData.get('scheduledDate')}T${formData.get('scheduledStartTime')}`).toISOString(),
-                  scheduledEndTime: new Date(`${formData.get('scheduledDate')}T${formData.get('scheduledEndTime')}`).toISOString(),
+                  scheduledDate: new Date(scheduledDate).toISOString(),
+                  scheduledStartTime: startTime.toISOString(),
+                  scheduledEndTime: endTime.toISOString(),
                   estimatedDuration: parseInt(formData.get('estimatedDuration') as string),
                   priority: formData.get('priority') as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW',
                   anesthesiaType: formData.get('anesthesiaType') as 'GENERAL' | 'SPINAL' | 'EPIDURAL' | 'LOCAL' | 'REGIONAL' | 'SEDATION',
@@ -449,7 +554,10 @@ export default function SurgerySchedulerPage() {
 
                 await createSurgery(surgeryData);
                 setShowCreateModal(false);
-                fetchData();
+                
+                // Update selected date to match the scheduled surgery date
+                setSelectedDate(new Date(scheduledDate));
+                
                 alert('Surgery scheduled successfully!');
               } catch (error) {
                 console.error('Error creating surgery:', error);
