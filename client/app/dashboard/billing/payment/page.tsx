@@ -161,39 +161,39 @@ function CollectPayment() {
               </h2>
 
               {selectedInvoice ? (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-gray-800 dark:bg-gray-700 border border-gray-600 dark:border-gray-500 rounded-lg p-4">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-800 text-lg">
+                      <p className="font-semibold text-white dark:text-gray-100 text-lg">
                         {selectedInvoice.invoiceNumber}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-gray-300 dark:text-gray-400 mt-1">
                         Patient: {selectedInvoice.patient.user.firstName}{' '}
                         {selectedInvoice.patient.user.lastName}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-300 dark:text-gray-400">
                         ID: {selectedInvoice.patient.patientId}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-300 dark:text-gray-400">
                         Date: {new Date(selectedInvoice.invoiceDate).toLocaleDateString()}
                       </p>
                       
                       <div className="mt-4 grid grid-cols-3 gap-4">
                         <div>
-                          <p className="text-xs text-gray-500">Total Amount</p>
-                          <p className="text-lg font-bold text-gray-800">
+                          <p className="text-xs text-gray-400">Total Amount</p>
+                          <p className="text-lg font-bold text-white dark:text-gray-100">
                             ₹{selectedInvoice.totalAmount.toLocaleString()}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Paid</p>
-                          <p className="text-lg font-bold text-green-600">
+                          <p className="text-xs text-gray-400">Paid</p>
+                          <p className="text-lg font-bold text-green-400">
                             ₹{selectedInvoice.paidAmount.toLocaleString()}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Balance Due</p>
-                          <p className="text-lg font-bold text-red-600">
+                          <p className="text-xs text-gray-400">Balance Due</p>
+                          <p className="text-lg font-bold text-red-400">
                             ₹{selectedInvoice.balanceAmount.toLocaleString()}
                           </p>
                         </div>
