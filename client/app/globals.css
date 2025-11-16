@@ -259,3 +259,9 @@
 .animation-delay-4000 {
   animation-delay: 4s;
 }
+
+/* Hide Next.js development indicator */
+#__next-build-watcher,
+button[data-nextjs-toast-errors-parent] {
+  display: none !important;
+}
