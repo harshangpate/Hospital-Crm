@@ -98,7 +98,13 @@ export const getWards = async (req: Request, res: Response) => {
       orderBy: { wardNumber: 'asc' },
     });
 
-    res.json({ data: wards });
+    // Calculate occupied beds dynamically for each ward
+    const wardsWithStats = wards.map(ward => ({
+      ...ward,
+      occupiedBeds: ward.beds.filter(bed => bed.status === 'OCCUPIED').length
+    }));
+
+    res.json({ data: wardsWithStats });
   } catch (error: any) {
     console.error('Error fetching wards:', error);
     res.status(500).json({ message: 'Failed to fetch wards', error: error.message });
@@ -150,7 +156,16 @@ export const getWardById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Ward not found' });
     }
 
-    res.json({ data: ward });
+    // Calculate occupied beds dynamically from bed statuses
+    const occupiedBeds = ward.beds.filter(bed => bed.status === 'OCCUPIED').length;
+
+    // Return ward with calculated occupiedBeds
+    const wardWithStats = {
+      ...ward,
+      occupiedBeds
+    };
+
+    res.json({ data: wardWithStats });
   } catch (error: any) {
     console.error('Error fetching ward:', error);
     res.status(500).json({ message: 'Failed to fetch ward', error: error.message });
