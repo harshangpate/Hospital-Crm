@@ -54,8 +54,11 @@ export default function PostOpRecord({ surgeryId }: { surgeryId: string }) {
       setLoading(true);
       const response = await getPostOpRecord(surgeryId);
       setRecord(response.data || getInitialRecordData());
-    } catch (error) {
-      console.error('Error fetching post-op record:', error);
+    } catch (error: any) {
+      // 404 is expected for surgeries without a post-op record yet
+      if (error?.response?.status !== 404) {
+        console.error('Error fetching post-op record:', error);
+      }
       setRecord(getInitialRecordData());
     } finally {
       setLoading(false);
@@ -75,12 +78,47 @@ export default function PostOpRecord({ surgeryId }: { surgeryId: string }) {
     
     try {
       setSaving(true);
-      await updatePostOpRecord(surgeryId, record);
+      
+      // Map frontend field names to backend/database field names
+      const mappedData: any = {
+        transferredTo: record.transferLocation,
+        transferredAt: record.transferToRecoveryTime,
+        consciousness: record.consciousnessLevel,
+        airwayStatus: record.airwayStatus,
+        breathingStatus: record.breathingStatus,
+        circulation: record.circulationStatus,
+        painScore: record.painScore,
+        vitalSignsFrequency: record.monitoringSchedule,
+        initialVitals: record.vitalsOnArrival ? { notes: record.vitalsOnArrival } : null,
+        drainOutput: record.drainsOutput,
+        catheterOutput: record.catheterOutput,
+        painManagement: record.painManagement,
+        antibioticsPrescribed: record.antibiotics,
+        otherMedications: record.otherMedications,
+        complications: record.complications,
+        dischargeCondition: record.dischargeCondition,
+        dischargedTo: record.dischargeLocation,
+        followUpInstructions: record.followUpInstructions,
+        followUpDate: record.followUpDate,
+        dischargeMedications: record.prescriptions,
+        dischargeNotes: record.notes,
+      };
+      
+      // Remove undefined/null/empty values
+      Object.keys(mappedData).forEach(key => {
+        if (mappedData[key] === undefined || mappedData[key] === null || mappedData[key] === '') {
+          delete mappedData[key];
+        }
+      });
+      
+      console.log('Saving post-op record:', mappedData);
+      await updatePostOpRecord(surgeryId, mappedData);
       setSuccessMessage('Record saved successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving record:', error);
-      alert('Failed to save record');
+      console.error('Error response:', error?.response?.data);
+      alert(`Failed to save record: ${error?.response?.data?.message || error.message}`);
     } finally {
       setSaving(false);
     }
