@@ -153,9 +153,66 @@ export default function PreOpChecklist({ surgeryId }: { surgeryId: string }) {
     try {
       setLoading(true);
       const response = await getPreOpChecklist(surgeryId);
-      setChecklist(response.data || getInitialChecklistData());
-    } catch (error) {
-      console.error('Error fetching checklist:', error);
+      
+      if (response.data) {
+        // Transform backend enum values back to frontend boolean format
+        const backendData = response.data;
+        const transformedData: any = {};
+        
+        // Reverse field mapping
+        const reverseFieldMapping: Record<string, string> = {
+          'consentSigned': 'consentSigned',
+          'identityVerified': 'patientIdentityVerified',
+          'allergiesVerified': 'allergiesVerified',
+          'fastingStatus': 'fastingStatus',
+          'bloodTestDone': 'bloodTestDone',
+          'xrayDone': 'xRayDone',
+          'ecgDone': 'ecgDone',
+          'otherTestsDone': 'otherTestsDone',
+          'preMedicationGiven': 'preMedicationGiven',
+          'currentMedsStopped': 'currentMedicationsStopped',
+          'anticoagulantsStatus': 'anticoagulantsStopped',
+          'otPrepared': 'otPrepared',
+          'instrumentsSterilized': 'instrumentsSterilized',
+          'equipmentChecked': 'equipmentChecked',
+          'bloodArranged': 'bloodArranged',
+          'implantsAvailable': 'implantsAvailable',
+          'anesthesiaAssessment': 'anesthesiaAssessmentDone',
+          'anesthesiaRisk': 'anesthesiaRiskAssessed',
+          'airwayAssessment': 'airwayAssessmentDone',
+          'siteMarked': 'siteMarked',
+          'jewelryRemoved': 'jewelryRemoved',
+          'dentalProstheticsRemoved': 'dentalProsthesisRemoved',
+          'ivLineSecured': 'ivLineSecured',
+          'catheterInserted': 'catheterInserted',
+          'whoTimeOutCompleted': 'whoTimeOutCompleted',
+          'teamIntroductionDone': 'whoTeamIntroductionDone',
+        };
+        
+        // Transform each field
+        Object.entries(backendData).forEach(([key, value]) => {
+          const frontendKey = reverseFieldMapping[key] || key;
+          
+          // Convert enum values to boolean
+          if (value === 'COMPLETED') {
+            transformedData[frontendKey] = true;
+          } else if (value === 'PENDING' || value === 'NOT_APPLICABLE' || value === 'FAILED') {
+            transformedData[frontendKey] = false;
+          } else if (value !== null && value !== undefined) {
+            // Keep text fields as-is
+            transformedData[frontendKey] = value;
+          }
+        });
+        
+        setChecklist({ ...getInitialChecklistData(), ...transformedData });
+      } else {
+        setChecklist(getInitialChecklistData());
+      }
+    } catch (error: any) {
+      // 404 is expected for surgeries without a checklist yet
+      if (error?.response?.status !== 404) {
+        console.error('Error fetching checklist:', error);
+      }
       setChecklist(getInitialChecklistData());
     } finally {
       setLoading(false);
@@ -204,12 +261,66 @@ export default function PreOpChecklist({ surgeryId }: { surgeryId: string }) {
     
     try {
       setSaving(true);
-      await updatePreOpChecklist(surgeryId, checklist);
+      
+      // Field name mapping from frontend to backend
+      const fieldMapping: Record<string, string> = {
+        'patientIdentityVerified': 'identityVerified',
+        'xRayDone': 'xrayDone',
+        'xRayResults': 'xrayResults',
+        'currentMedicationsStopped': 'currentMedsStopped',
+        'dentalProsthesisRemoved': 'dentalProstheticsRemoved',
+        'bloodUnits': 'bloodUnitsAvailable',
+        'notes': 'remarks',
+      };
+      
+      // Fields that should be sent as strings (not enums)
+      const stringFields = ['anesthesiaRisk', 'airwayAssessment', 'anticoagulantsStatus'];
+      
+      // Fields that should remain boolean
+      const booleanFields = ['teamIntroductionDone', 'whoTeamIntroductionDone'];
+      
+      // Transform boolean values to enum strings and map field names
+      const transformedData: any = {};
+      Object.entries(checklist).forEach(([key, value]) => {
+        const backendKey = fieldMapping[key] || key;
+        
+        // Skip undefined, null, or empty string values
+        if (value === undefined || value === null || value === '') {
+          return;
+        }
+        
+        // Skip datetime fields if they don't have valid values
+        if (key === 'npoSince' && (!value || value === '')) {
+          return;
+        }
+        
+        // Keep booleans as booleans for specific fields
+        if (booleanFields.includes(backendKey) || booleanFields.includes(key)) {
+          transformedData[backendKey] = value;
+        }
+        // Convert booleans to strings for string-type fields
+        else if (stringFields.includes(backendKey) && typeof value === 'boolean') {
+          transformedData[backendKey] = value ? 'Yes' : 'No';
+        }
+        // Convert booleans to enum values for checklist items
+        else if (typeof value === 'boolean') {
+          transformedData[backendKey] = value ? 'COMPLETED' : 'PENDING';
+        }
+        // Pass through other values as-is
+        else {
+          transformedData[backendKey] = value;
+        }
+      });
+      
+      console.log('Sending checklist data:', transformedData);
+      
+      await updatePreOpChecklist(surgeryId, transformedData);
       setSuccessMessage('Checklist saved successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving checklist:', error);
-      alert('Failed to save checklist');
+      console.error('Error response:', error?.response?.data);
+      alert(`Failed to save checklist: ${error?.response?.data?.message || error.message}`);
     } finally {
       setSaving(false);
     }
