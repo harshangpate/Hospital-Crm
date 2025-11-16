@@ -79,11 +79,10 @@ export default function RegisterPage() {
       const response = await registerUser(registrationData);
       
       if (response.success) {
-        setAuth(response.data.user, response.data.token);
-        toast.success('Registration successful! Welcome to Hospital CRM.');
+        toast.success('Registration completed successfully! Please login to continue.');
         
-        // Redirect to main dashboard (will auto-redirect to role-specific dashboard)
-        router.push('/dashboard');
+        // Redirect to login page
+        router.push('/login');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
