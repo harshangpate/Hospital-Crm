@@ -8,6 +8,7 @@ import { Stethoscope, Search, Filter, Eye, Calendar, ArrowLeft, Star, Clock } fr
 import { useTranslation } from '@/lib/hooks/useTranslation';
 
 interface DoctorDetails {
+  id?: string; // Add Doctor table ID
   doctorId?: string;
   specialization?: string;
   qualification?: string;
@@ -31,7 +32,8 @@ interface UserWithDoctor {
 }
 
 interface Doctor {
-  id: string;
+  id: string; // Doctor table ID
+  userId?: string; // User table ID
   doctorId?: string;
   firstName: string;
   lastName: string;
@@ -62,7 +64,26 @@ export default function DoctorsListPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState('');
-  const [specializations, setSpecializations] = useState<string[]>([]);
+  
+  // Predefined list of medical specializations
+  const allSpecializations = [
+    'Cardiology',
+    'Dermatology',
+    'ENT',
+    'General Medicine',
+    'General Surgery',
+    'Gynecology',
+    'Neurology',
+    'Oncology',
+    'Ophthalmology',
+    'Orthopedics',
+    'Pediatrics',
+    'Psychiatry',
+    'Radiology',
+    'Urology'
+  ];
+  
+  const [specializations, setSpecializations] = useState<string[]>(allSpecializations);
 
   useEffect(() => {
     fetchDoctors();
@@ -87,7 +108,8 @@ export default function DoctorsListPage() {
         
         // Map the user data to flatten doctor information
         const doctorsArray = usersArray.map((user: UserWithDoctor) => ({
-          id: user.id,
+          id: user.doctor?.id || user.id, // Use Doctor table ID, fallback to User ID
+          userId: user.id, // Store User ID separately
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
@@ -108,9 +130,8 @@ export default function DoctorsListPage() {
         setDoctors(doctorsArray);
         setFilteredDoctors(doctorsArray);
         
-        // Extract unique specializations
-        const uniqueSpecs = [...new Set(doctorsArray.map((d: Doctor) => d.specialization))].filter(Boolean) as string[];
-        setSpecializations(uniqueSpecs);
+        // Keep predefined specializations list (don't override with database values)
+        // This ensures all specializations are visible even if no doctors have them assigned
       }
     } catch (error) {
       console.error('Error fetching doctors:', error);
