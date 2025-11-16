@@ -10,17 +10,24 @@ interface Doctor {
   id: string;
   doctorId: string;
   specialization: string;
+  qualification?: string;
+  experience?: number;
   licenseNumber: string;
-  experienceYears: number;
+  experienceYears?: number;
   consultationFee: number;
-  availableDays: string[];
-  availableTimeStart: string;
-  availableTimeEnd: string;
+  availableDays?: string[];
+  availableTimeStart?: string;
+  availableTimeEnd?: string;
+  department?: string;
+  designation?: string;
   user: {
+    id: string;
     firstName: string;
     lastName: string;
     email: string;
-    phoneNumber: string;
+    phone?: string;
+    phoneNumber?: string;
+    isActive: boolean;
   };
 }
 
@@ -144,7 +151,7 @@ export default function DoctorDetailPage() {
                     <p className="text-sm text-gray-600">Experience</p>
                     <div className="flex items-center gap-2">
                       <Award className="w-4 h-4 text-blue-600" />
-                      <span className="font-medium text-gray-900">{doctor.experienceYears} years</span>
+                      <span className="font-medium text-gray-900">{doctor.experience || doctor.experienceYears || 0} years</span>
                     </div>
                   </div>
                   <div>
@@ -177,7 +184,7 @@ export default function DoctorDetailPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Phone className="w-4 h-4 text-gray-600" />
-                    <span className="text-gray-900">{doctor.user.phoneNumber}</span>
+                    <span className="text-gray-900">{doctor.user.phone || doctor.user.phoneNumber || 'N/A'}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Mail className="w-4 h-4 text-gray-600" />
@@ -200,7 +207,7 @@ export default function DoctorDetailPage() {
                         <span
                           key={day}
                           className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            doctor.availableDays.includes(day.toUpperCase())
+                            doctor.availableDays?.includes(day.toUpperCase())
                               ? 'bg-green-100 text-green-800'
                               : 'bg-gray-100 text-gray-400'
                           }`}
@@ -215,7 +222,9 @@ export default function DoctorDetailPage() {
                     <div className="flex items-center gap-2 text-gray-900">
                       <Clock className="w-5 h-5 text-blue-600" />
                       <span className="font-medium text-lg">
-                        {doctor.availableTimeStart} - {doctor.availableTimeEnd}
+                        {doctor.availableTimeStart && doctor.availableTimeEnd 
+                          ? `${doctor.availableTimeStart} - ${doctor.availableTimeEnd}`
+                          : 'Schedule not set'}
                       </span>
                     </div>
                   </div>
@@ -239,7 +248,7 @@ export default function DoctorDetailPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Experience:</span>
-                    <span className="font-medium text-gray-900">{doctor.experienceYears} years</span>
+                    <span className="font-medium text-gray-900">{doctor.experience || doctor.experienceYears || 0} years</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Consultation:</span>
