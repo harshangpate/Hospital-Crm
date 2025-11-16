@@ -55,14 +55,6 @@ export const getOperationTheaterById = async (req: Request, res: Response) => {
       where: { id },
       include: {
         surgeries: {
-          where: {
-            scheduledDate: {
-              gte: new Date(),
-            },
-            status: {
-              in: ['SCHEDULED', 'PRE_OP', 'IN_PROGRESS'],
-            },
-          },
           include: {
             patient: {
               include: {
@@ -86,7 +78,7 @@ export const getOperationTheaterById = async (req: Request, res: Response) => {
             },
           },
           orderBy: {
-            scheduledStartTime: 'asc',
+            scheduledStartTime: 'desc',
           },
         },
         equipmentList: true,

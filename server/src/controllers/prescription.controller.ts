@@ -20,7 +20,9 @@ export const getPrescriptions = async (req: Request, res: Response) => {
       patientId,
       doctorId,
       status,
-      search
+      search,
+      startDate,
+      endDate
     } = req.query;
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -28,6 +30,17 @@ export const getPrescriptions = async (req: Request, res: Response) => {
 
     // Build where clause
     const where: any = {};
+    
+    // Date range filter
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate as string);
+      if (endDate) {
+        const end = new Date(endDate as string);
+        end.setHours(23, 59, 59, 999); // Include the entire end date
+        where.createdAt.lte = end;
+      }
+    }
     
     // SECURITY: Filter by user role
     if (req.user?.role === 'PATIENT') {

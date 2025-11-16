@@ -618,7 +618,7 @@ export const toggleUserStatus = async (req: Request, res: Response) => {
   }
 };
 
-// Delete user (soft delete by deactivating)
+// Delete user (hard delete - permanently removes user)
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -634,15 +634,14 @@ export const deleteUser = async (req: Request, res: Response) => {
       });
     }
 
-    // Soft delete - just deactivate
-    await prisma.user.update({
-      where: { id },
-      data: { isActive: false }
+    // Hard delete - permanently remove user and all related data
+    await prisma.user.delete({
+      where: { id }
     });
 
     return res.status(200).json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'User permanently deleted successfully'
     });
   } catch (error: any) {
     console.error('Error deleting user:', error);

@@ -23,7 +23,7 @@ router.get('/profile', getUserProfile);
 router.put('/profile', updateUserProfile);
 
 // Get all users - allow various roles to view (needed for prescriptions/medical records/billing/lab tests)
-router.get('/', authorize('ADMIN', 'SUPER_ADMIN', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'ACCOUNTANT', 'LAB_TECHNICIAN'), getAllUsers);
+router.get('/', authorize('ADMIN', 'SUPER_ADMIN', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'ACCOUNTANT', 'PHARMACIST', 'LAB_TECHNICIAN'), getAllUsers);
 
 // Stats route - must be before /:id to avoid matching "stats" as an id parameter
 router.get('/stats', authorize('ADMIN', 'SUPER_ADMIN'), getUserStats);

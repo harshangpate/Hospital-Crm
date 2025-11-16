@@ -35,10 +35,30 @@ export const getAllSurgeries = async (req: Request, res: Response) => {
     if (operationTheaterId) where.operationTheaterId = operationTheaterId;
 
     if (startDate && endDate) {
-      where.scheduledDate = {
-        gte: new Date(startDate as string),
-        lte: new Date(endDate as string),
-      };
+      // Find surgeries that are ongoing during the selected date range
+      // This includes surgeries that:
+      // 1. Start during the range, OR
+      // 2. End during the range (including 2-hour cleanup), OR
+      // 3. Start before and end after the range
+      const rangeStart = new Date(startDate as string);
+      const rangeEnd = new Date(endDate as string);
+      
+      where.OR = [
+        {
+          // Surgery starts within the range
+          scheduledStartTime: {
+            gte: rangeStart,
+            lte: rangeEnd,
+          },
+        },
+        {
+          // Surgery ends within the range (including cleanup time)
+          AND: [
+            { scheduledStartTime: { lte: rangeEnd } },
+            { scheduledEndTime: { gte: rangeStart } },
+          ],
+        },
+      ];
     }
 
     const [surgeries, total] = await Promise.all([
@@ -288,6 +308,10 @@ export const createSurgery = async (req: Request, res: Response) => {
     const surgeryCount = await prisma.surgery.count();
     const surgeryNumber = `SRG-${new Date().getFullYear()}-${String(surgeryCount + 1).padStart(6, '0')}`;
 
+    // Parse date and normalize to start of day for scheduledDate field
+    const scheduledDateObj = new Date(validatedData.scheduledDate);
+    scheduledDateObj.setHours(0, 0, 0, 0);
+
     // Create surgery with surgical team
     const surgery = await prisma.surgery.create({
       data: {
@@ -299,7 +323,7 @@ export const createSurgery = async (req: Request, res: Response) => {
         surgeryName: validatedData.surgeryName,
         description: validatedData.description,
         diagnosis: validatedData.diagnosis,
-        scheduledDate: new Date(validatedData.scheduledDate),
+        scheduledDate: scheduledDateObj,
         scheduledStartTime: new Date(validatedData.scheduledStartTime),
         scheduledEndTime: new Date(validatedData.scheduledEndTime),
         estimatedDuration: validatedData.estimatedDuration,

@@ -12,6 +12,8 @@ export const getAllInvoices = async (req: Request, res: Response) => {
       status,
       patientId,
       search,
+      startDate,
+      endDate,
       page = '1',
       limit = '20',
       sortBy = 'invoiceDate',
@@ -24,8 +26,30 @@ export const getAllInvoices = async (req: Request, res: Response) => {
     // Build where clause
     const where: any = {};
 
+    // Date range filter
+    if (startDate || endDate) {
+      where.invoiceDate = {};
+      if (startDate) {
+        const start = new Date(startDate as string);
+        start.setHours(0, 0, 0, 0); // Set to beginning of day
+        where.invoiceDate.gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate as string);
+        end.setHours(23, 59, 59, 999); // Include the entire end date
+        where.invoiceDate.lte = end;
+      }
+    }
+
     if (status && status !== 'ALL') {
-      where.paymentStatus = status as PaymentStatus;
+      // Handle comma-separated multiple statuses
+      if (typeof status === 'string' && status.includes(',')) {
+        where.paymentStatus = {
+          in: status.split(',').map(s => s.trim() as PaymentStatus)
+        };
+      } else {
+        where.paymentStatus = status as PaymentStatus;
+      }
     }
 
     if (patientId) {

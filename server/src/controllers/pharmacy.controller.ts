@@ -401,7 +401,7 @@ export const dispensePrescription = async (req: Request, res: Response) => {
 // Get medicine inventory
 export const getInventory = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10, search = '', lowStock = false } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
 
     const skip = (Number(page) - 1) * Number(limit);
     const take = Number(limit);
@@ -415,10 +415,6 @@ export const getInventory = async (req: Request, res: Response) => {
           { genericName: { contains: search as string, mode: 'insensitive' } },
         ],
       };
-    }
-
-    if (lowStock === 'true') {
-      where.quantity = { lte: prisma.medicineInventory.fields.reorderLevel };
     }
 
     const [inventory, total] = await Promise.all([
@@ -564,10 +560,9 @@ export const getPharmacyStats = async (req: Request, res: Response) => {
     const [
       pendingPrescriptions,
       dispensedToday,
-      lowStockItems,
+      allInventoryItems,
       expiringItems,
       totalMedicines,
-      inventoryItems,
     ] = await Promise.all([
       // Pending prescriptions count
       prisma.prescription.count({
@@ -585,12 +580,12 @@ export const getPharmacyStats = async (req: Request, res: Response) => {
         },
       }),
 
-      // Low stock items (quantity <= reorder level)
-      prisma.medicineInventory.count({
-        where: {
-          quantity: {
-            lte: prisma.medicineInventory.fields.reorderLevel,
-          },
+      // Get all inventory items to calculate low stock and total value
+      prisma.medicineInventory.findMany({
+        select: {
+          quantity: true,
+          reorderLevel: true,
+          sellingPrice: true,
         },
       }),
 
@@ -610,18 +605,15 @@ export const getPharmacyStats = async (req: Request, res: Response) => {
           isAvailable: true,
         },
       }),
-
-      // Get all inventory items to calculate total value
-      prisma.medicineInventory.findMany({
-        select: {
-          quantity: true,
-          sellingPrice: true,
-        },
-      }),
     ]);
 
+    // Calculate low stock items (quantity <= reorder level)
+    const lowStockItems = allInventoryItems.filter(
+      item => item.quantity <= item.reorderLevel
+    ).length;
+
     // Calculate total inventory value
-    const totalInventoryValue = inventoryItems.reduce(
+    const totalInventoryValue = allInventoryItems.reduce(
       (sum, item) => sum + (item.quantity * item.sellingPrice),
       0
     );

@@ -3,6 +3,93 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Get doctor by ID (supports both Doctor ID and User ID)
+export const getDoctorById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    console.log('=== GET DOCTOR BY ID ===');
+    console.log('Requested ID:', id);
+
+    // Try finding by Doctor ID first
+    let doctor = await prisma.doctor.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            isActive: true,
+          },
+        },
+        appointments: {
+          select: {
+            id: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    console.log('Doctor found by Doctor ID:', doctor ? 'YES' : 'NO');
+
+    // If not found, try finding by User ID (backward compatibility)
+    if (!doctor) {
+      console.log('Attempting to find by User ID...');
+      doctor = await prisma.doctor.findUnique({
+        where: { userId: id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phone: true,
+              isActive: true,
+            },
+          },
+          appointments: {
+            select: {
+              id: true,
+              status: true,
+            },
+          },
+        },
+      });
+      console.log('Doctor found by User ID:', doctor ? 'YES' : 'NO');
+    }
+
+    console.log('Doctor data:', JSON.stringify(doctor, null, 2));
+
+    if (!doctor) {
+      console.log('Returning 404 - Doctor not found');
+      return res.status(404).json({
+        success: false,
+        message: 'Doctor not found. This user may not have a doctor profile created yet.',
+      });
+    }
+
+    console.log('Returning 200 - Success');
+    return res.status(200).json({
+      success: true,
+      data: doctor,
+    });
+  } catch (error: any) {
+    console.error('=== ERROR IN GET DOCTOR BY ID ===');
+    console.error('Error:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch doctor details',
+      error: error.message,
+    });
+  }
+};
+
 // Get available doctors by specialty
 export const getDoctorsBySpecialty = async (req: Request, res: Response) => {
   try {
