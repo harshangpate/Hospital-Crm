@@ -178,12 +178,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       data: { lastLogin: new Date() },
     });
 
-    // Send login alert email (check user's security settings)
-    try {
-      const emailService = require('../services/email.service').default;
-      await emailService.sendEmail({
-        to: user.email,
-        subject: '🔔 New Login to Your Hospital CRM Account',
+    // Generate token
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    // Remove password from response
+    const { password, ...userWithoutPassword } = user;
+
+    // Send login alert email in background (don't wait for it)
+    setImmediate(async () => {
+      try {
+        const emailService = require('../services/email.service').default;
+        await emailService.sendEmail({
+          to: user.email,
+          subject: '🔔 New Login to Your Hospital CRM Account',
         html: `
           <!DOCTYPE html>
           <html>
@@ -310,20 +321,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           </html>
         `,
       });
-    } catch (emailError) {
-      console.error('Failed to send login alert email:', emailError);
-      // Don't fail the login if email fails
-    }
-
-    // Generate token
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      role: user.role,
+      } catch (emailError) {
+        console.error('Failed to send login alert email:', emailError);
+        // Don't fail the login if email fails
+      }
     });
-
-    // Remove password from response
-    const { password, ...userWithoutPassword } = user;
 
     res.status(200).json({
       success: true,
