@@ -34,6 +34,9 @@ export default function DashboardPage() {
         case 'ACCOUNTANT':
           router.replace('/dashboard/billing');
           break;
+        case 'HR_MANAGER':
+          router.replace('/dashboard/staff/hr');
+          break;
         case 'ADMIN':
         case 'SUPER_ADMIN':
           router.replace('/dashboard/admin');

@@ -1,0 +1,88 @@
+┌─────────────────────────────────────────────────────────────────────┐
+│             🏥 HOSPITAL CRM - QUICK REFERENCE CARD                  │
+└─────────────────────────────────────────────────────────────────────┘
+
+📍 APPLICATION URLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Frontend:      http://localhost:3000
+Backend API:   http://localhost:5000
+API Health:    http://localhost:5000/health
+
+🔐 LOGIN CREDENTIALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Super Admin:   superadmin@hospital.com     / SuperAdmin@123
+Admin:         admin@hospital.com          / Admin@123
+Doctor:        sarah.johnson@hospital.com  / Doctor@123
+Nurse:         mary.williams@hospital.com  / Staff@123
+Receptionist:  lisa.thompson@hospital.com  / Staff@123
+Pharmacist:    john.pharmacist@hospital.com / Staff@123
+Lab Tech:      thomas.lab@hospital.com     / Staff@123
+Patient:       john.doe@email.com          / Patient@123
+
+📊 SEEDED DATA SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ 28 Users (all roles)          ✓ 10 Patients
+✓ 6 Doctors                     ✓ 10 Staff Members
+✓ 42 Doctor Schedules           ✓ 14 Appointments
+✓ 12 Allergies                  ✓ 15 Medical Histories
+✓ 20 Medications                ✓ 20 Inventory Records
+✓ 6 Wards                       ✓ 88 Beds
+✓ 5 Admissions                  ✓ 15 Settings
+✓ 10 Notifications              ✓ 8 Audit Logs
+
+💻 USEFUL COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Start both servers
+npm run dev
+
+# Start backend only
+cd server && npm run dev
+
+# Start frontend only
+cd client && npm run dev
+
+# Run database seed
+cd server && npm run seed
+
+# Reset & re-seed database
+cd server && npx prisma db push --force-reset && npm run seed
+
+# Open Prisma Studio
+cd server && npx prisma studio
+
+# Generate Prisma Client
+cd server && npx prisma generate
+
+📁 PROJECT STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+client/              → Next.js frontend
+server/              → Express.js backend
+  ├── prisma/        → Database schema & seeds
+  ├── src/           → Source code
+  └── .env           → Environment variables
+shared/              → Shared types
+
+🎯 NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Access http://localhost:3000
+2. Login with any credentials above
+3. Explore all modules and features
+4. Test appointments, prescriptions, lab tests, etc.
+5. Review seeded data in Prisma Studio
+
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+README.md                       → Main documentation
+SEEDING_GUIDE.md               → Detailed seeding guide
+DATABASE_SEEDING_COMPLETE.md   → Seeding completion summary
+LOGIN_CREDENTIALS.md           → All user accounts
+API_TESTING.md                 → API endpoints reference
+
+⚠️  SECURITY NOTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+All passwords are for DEVELOPMENT ONLY!
+Change all credentials before production deployment.
+
+═══════════════════════════════════════════════════════════════════════
+        🎉 Your Hospital CRM is ready to use! Happy coding! 🎉
+═══════════════════════════════════════════════════════════════════════

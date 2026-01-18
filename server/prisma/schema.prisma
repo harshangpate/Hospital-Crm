@@ -83,6 +83,7 @@ model Patient {
   prescriptions            Prescription[]
   vitalSigns               VitalSign[]
   surgeries                Surgery[]
+  emergencyVisits          EmergencyVisit[]
 
   @@index([userId])
   @@index([patientId])
@@ -115,6 +116,7 @@ model Doctor {
   medicalRecords  MedicalRecord[]
   prescriptions   Prescription[]
   surgeriesAsPrimarySurgeon Surgery[]    @relation("PrimarySurgeon")
+  emergencyVisits EmergencyVisit[]
 
   @@index([doctorId])
   @@index([userId])
@@ -156,15 +158,21 @@ model DoctorBlockedSlot {
 }
 
 model Staff {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  staffId     String   @unique
-  department  String
-  designation String
-  joiningDate DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String              @id @default(uuid())
+  userId              String              @unique
+  staffId             String              @unique
+  department          String
+  designation         String
+  joiningDate         DateTime            @default(now())
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attendance          Attendance[]
+  leaves              Leave[]
+  leaveBalances       LeaveBalance[]
+  shiftAssignments    ShiftAssignment[]
+  payroll             Payroll[]
+  performanceReviews  PerformanceReview[]
 
   @@index([userId])
   @@index([staffId])
@@ -258,6 +266,7 @@ model VitalSign {
   id                     String         @id @default(uuid())
   medicalRecordId        String?
   patientId              String
+  admissionId            String?
   recordedBy             String
   bloodPressureSystolic  Int?
   bloodPressureDiastolic Int?
@@ -275,9 +284,11 @@ model VitalSign {
   updatedAt              DateTime       @updatedAt
   medicalRecord          MedicalRecord? @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
   patient                Patient        @relation(fields: [patientId], references: [id])
+  admission              Admission?     @relation(fields: [admissionId], references: [id], onDelete: Cascade)
 
   @@index([medicalRecordId])
   @@index([patientId])
+  @@index([admissionId])
   @@map("vital_signs")
 }
 
@@ -716,33 +727,75 @@ model Bed {
 }
 
 model Admission {
-  id                    String    @id @default(uuid())
-  admissionNumber       String    @unique
-  patientId             String
-  bedId                 String?
-  admissionDate         DateTime  @default(now())
-  dischargeDate         DateTime?
-  dischargeSummary      String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  admissionType         String    // Emergency, Planned, Transfer
-  attendingDoctorId     String
-  dischargeInstructions String?
-  primaryDiagnosis      String?
-  reasonForAdmission    String
-  status                String    @default("ADMITTED") // ADMITTED, DISCHARGED, TRANSFERRED
-  estimatedDischarge    DateTime?
-  relativeName          String?
-  relativePhone         String?
-  advancePayment        Float?
-  patient               Patient   @relation(fields: [patientId], references: [id])
-  bed                   Bed?      @relation(fields: [bedId], references: [id])
+  id                     String         @id @default(uuid())
+  admissionNumber        String         @unique
+  patientId              String
+  bedId                  String?
+  admissionDate          DateTime       @default(now())
+  dischargeDate          DateTime?
+  dischargeSummary       String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  admissionType          String         // Emergency, Planned, Transfer
+  attendingDoctorId      String
+  dischargeInstructions  String?
+  primaryDiagnosis       String?
+  reasonForAdmission     String
+  status                 String         @default("ADMITTED") // ADMITTED, DISCHARGED, TRANSFERRED, UNDER_TREATMENT
+  estimatedDischarge     DateTime?
+  relativeName           String?
+  relativePhone          String?
+  advancePayment         Float?
+  // Enhanced discharge fields
+  finalDiagnosis         String?
+  treatmentProvided      String?
+  medicationsOnDischarge String?
+  followUpDate           DateTime?
+  dischargedBy           String?
+  patientCondition       String?        // STABLE, IMPROVED, CRITICAL, EXPIRED
+  dischargeType          String?        // ROUTINE, AGAINST_MEDICAL_ADVICE, TRANSFER, ABSCONDED, DEATH
+  patient                Patient        @relation(fields: [patientId], references: [id])
+  bed                    Bed?           @relation(fields: [bedId], references: [id])
+  progressNotes          ProgressNote[]
+  vitalSignRecords       VitalSign[]
+  emergencyVisits        EmergencyVisit[]
 
   @@index([patientId])
   @@index([bedId])
   @@index([admissionNumber])
   @@index([status])
   @@map("admissions")
+}
+
+model ProgressNote {
+  id            String   @id @default(uuid())
+  admissionId   String
+  patientId     String
+  doctorId      String
+  noteDate      DateTime @default(now())
+  // SOAP Format Fields
+  subjective    String?  // Patient's complaints, symptoms (what patient says)
+  objective     String?  // Observable findings, examination results, vitals
+  assessment    String   // Doctor's diagnosis, analysis, impression
+  plan          String   // Treatment plan, medications, orders
+  // Additional fields
+  noteType      String   @default("DAILY") // DAILY, ADMISSION, DISCHARGE, CONSULTATION, EMERGENCY
+  priority      String   @default("ROUTINE") // ROUTINE, URGENT, CRITICAL
+  isPrivate     Boolean  @default(false)
+  tags          String?  // Comma-separated tags for filtering
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String   // Doctor/Staff who created the note
+  lastEditedBy  String?
+  lastEditedAt  DateTime?
+  admission     Admission @relation(fields: [admissionId], references: [id], onDelete: Cascade)
+
+  @@index([admissionId])
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([noteDate])
+  @@index([noteType])
+  @@map("progress_notes")
 }
 
 model Notification {
@@ -828,6 +881,7 @@ enum UserRole {
   LAB_TECHNICIAN
   RADIOLOGIST
   ACCOUNTANT
+  HR_MANAGER
   PATIENT
 }
 
@@ -1424,4 +1478,515 @@ model SurgeryBillingItem {
 
   @@index([surgeryId])
   @@map("surgery_billing_items")
+}
+
+// ============================================
+// HR MANAGEMENT MODELS
+// ============================================
+
+model Attendance {
+  id          String            @id @default(uuid())
+  staffId     String
+  date        DateTime
+  status      AttendanceStatus  @default(PENDING)
+  checkIn     DateTime?
+  checkOut    DateTime?
+  workHours   Float?
+  lateBy      Int?              // minutes late
+  earlyLeave  Int?              // minutes early
+  overtime    Float?            // hours
+  remarks     String?
+  markedBy    String?           // User ID who marked attendance
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  staff       Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, date])
+  @@index([staffId])
+  @@index([date])
+  @@index([status])
+  @@map("attendance")
+}
+
+model Leave {
+  id              String        @id @default(uuid())
+  staffId         String
+  leaveType       LeaveType
+  startDate       DateTime
+  endDate         DateTime
+  totalDays       Int
+  reason          String
+  status          LeaveStatus   @default(PENDING)
+  appliedOn       DateTime      @default(now())
+  approvedBy      String?
+  approvedOn      DateTime?
+  rejectionReason String?
+  documents       String?       // JSON array of document URLs
+  remarks         String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  staff           Staff         @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@index([status])
+  @@index([startDate])
+  @@map("leaves")
+}
+
+model LeaveBalance {
+  id              String    @id @default(uuid())
+  staffId         String
+  year            Int
+  casualLeave     Int       @default(12)
+  sickLeave       Int       @default(12)
+  earnedLeave     Int       @default(15)
+  maternityLeave  Int       @default(0)
+  paternityLeave  Int       @default(0)
+  usedCasual      Int       @default(0)
+  usedSick        Int       @default(0)
+  usedEarned      Int       @default(0)
+  usedMaternity   Int       @default(0)
+  usedPaternity   Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  staff           Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, year])
+  @@index([staffId])
+  @@map("leave_balances")
+}
+
+model Shift {
+  id            String          @id @default(uuid())
+  name          String
+  startTime     String          // HH:MM format
+  endTime       String          // HH:MM format
+  duration      Float           // hours
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  shiftAssignments ShiftAssignment[]
+
+  @@map("shifts")
+}
+
+model ShiftAssignment {
+  id          String    @id @default(uuid())
+  staffId     String
+  shiftId     String
+  date        DateTime
+  status      String    @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  remarks     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  staff       Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  shift       Shift     @relation(fields: [shiftId], references: [id])
+
+  @@unique([staffId, date])
+  @@index([staffId])
+  @@index([shiftId])
+  @@index([date])
+  @@map("shift_assignments")
+}
+
+model Payroll {
+  id                String    @id @default(uuid())
+  staffId           String
+  month             Int       // 1-12
+  year              Int
+  basicSalary       Float
+  allowances        Float     @default(0)
+  deductions        Float     @default(0)
+  overtime          Float     @default(0)
+  bonus             Float     @default(0)
+  netSalary         Float
+  status            PayrollStatus @default(PENDING)
+  paymentDate       DateTime?
+  paymentMethod     String?
+  remarks           String?
+  generatedBy       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  staff             Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, month, year])
+  @@index([staffId])
+  @@index([month, year])
+  @@index([status])
+  @@map("payroll")
+}
+
+model PerformanceReview {
+  id              String    @id @default(uuid())
+  staffId         String
+  reviewPeriod    String    // Q1 2024, H1 2024, etc.
+  reviewDate      DateTime
+  reviewedBy      String
+  overallRating   Float     // 1-5
+  productivity    Float?
+  quality         Float?
+  teamwork        Float?
+  communication   Float?
+  punctuality     Float?
+  strengths       String?
+  weaknesses      String?
+  goals           String?
+  comments        String?
+  status          String    @default("DRAFT") // DRAFT, SUBMITTED, ACKNOWLEDGED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  staff           Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@index([reviewDate])
+  @@map("performance_reviews")
+}
+
+// ============================================
+// HR MANAGEMENT ENUMS
+// ============================================
+
+enum AttendanceStatus {
+  PENDING
+  PRESENT
+  ABSENT
+  LEAVE
+  HALF_DAY
+  LATE
+  ON_DUTY
+  WORK_FROM_HOME
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  EARNED
+  MATERNITY
+  PATERNITY
+  UNPAID
+  COMPENSATORY
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum PayrollStatus {
+  PENDING
+  PROCESSED
+  PAID
+  CANCELLED
+}
+// ============================================
+// EMERGENCY DEPARTMENT
+// ============================================
+
+model EmergencyVisit {
+  id                    String                    @id @default(uuid())
+  visitNumber           String                    @unique
+  patientId             String
+  
+  // Arrival Information
+  arrivalTime           DateTime                  @default(now())
+  modeOfArrival         EmergencyArrivalMode
+  chiefComplaint        String
+  briefHistory          String?
+  accompanyingPerson    String?
+  accompanyingContact   String?
+  referredBy            String?                   // Doctor/Hospital who referred
+  
+  // Triage Information
+  triageId              String?                   @unique
+  triageLevel           TriageLevel?
+  triagedAt             DateTime?
+  triagedBy             String?
+  
+  // Bed Assignment
+  bedId                 String?
+  bedAssignedAt         DateTime?
+  
+  // Doctor Assignment
+  assignedDoctorId      String?
+  assignedAt            DateTime?
+  
+  // Status Tracking
+  status                EmergencyVisitStatus      @default(WAITING)
+  
+  // Assessment & Treatment
+  presentingSymptoms    String?
+  vitalSignsAtTriage    Json?                     // Initial vitals
+  allergies             String?
+  currentMedications    String?
+  
+  // Examination
+  examinationFindings   String?
+  provisionalDiagnosis  String?
+  finalDiagnosis        String?
+  treatmentGiven        String?
+  investigationsOrdered String?
+  proceduresPerformed   String?
+  
+  // Disposition
+  disposition           EmergencyDisposition?
+  dispositionTime       DateTime?
+  dispositionNotes      String?
+  dischargeInstructions String?
+  followUpAdvice        String?
+  admittedToIPD         Boolean                   @default(false)
+  admissionId           String?
+  transferredTo         String?                   // Hospital name if transferred
+  
+  // Timestamps & Metrics
+  firstSeenByDoctorAt   DateTime?
+  treatmentStartTime    DateTime?
+  dispositionInitiatedAt DateTime?
+  departureTime         DateTime?
+  totalTimeInER         Int?                      // Minutes
+  waitingTime           Int?                      // Minutes from arrival to first doctor seen
+  
+  // Financial
+  estimatedCost         Float?
+  actualCost            Float?
+  
+  // Outcome
+  conditionOnDischarge  String?                   // Improved/Same/Deteriorated
+  followUpRequired      Boolean                   @default(false)
+  followUpDate          DateTime?
+  
+  // Audit
+  createdBy             String
+  updatedBy             String?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  
+  // Relations
+  patient               Patient                   @relation(fields: [patientId], references: [id])
+  triage                Triage?
+  assignedDoctor        Doctor?                   @relation(fields: [assignedDoctorId], references: [id])
+  bed                   EmergencyBed?             @relation(fields: [bedId], references: [id])
+  admission             Admission?                @relation(fields: [admissionId], references: [id])
+  vitals                EmergencyVitals[]
+  
+  @@index([patientId])
+  @@index([assignedDoctorId])
+  @@index([bedId])
+  @@index([status])
+  @@index([triageLevel])
+  @@index([arrivalTime])
+  @@index([disposition])
+  @@map("emergency_visits")
+}
+
+model Triage {
+  id                    String                    @id @default(uuid())
+  emergencyVisitId      String                    @unique
+  
+  // ESI (Emergency Severity Index) - 5 Level System
+  triageLevel           TriageLevel               // 1=Resuscitation, 2=Emergent, 3=Urgent, 4=Less Urgent, 5=Non-Urgent
+  triageColor           String                    // RED, ORANGE, YELLOW, GREEN, BLUE
+  
+  // Chief Complaint & History
+  chiefComplaint        String
+  historyOfPresentIllness String?
+  onsetTime             DateTime?
+  severity              String?                   // Mild/Moderate/Severe
+  
+  // Vital Signs at Triage
+  heartRate             Int?
+  bloodPressureSystolic Int?
+  bloodPressureDiastolic Int?
+  temperature           Float?
+  respiratoryRate       Int?
+  spO2                  Int?
+  painScore             Int?                      // 0-10
+  glucoseLevel          Float?
+  
+  // Quick Assessment
+  consciousLevel        String?                   // Alert/Drowsy/Unconscious
+  airwayStatus          String?                   // Clear/Compromised/Obstructed
+  breathingStatus       String?                   // Normal/Labored/Absent
+  circulationStatus     String?                   // Normal/Compromised/Absent
+  
+  // Risk Factors
+  activeBloodLoss       Boolean                   @default(false)
+  severeTrauma          Boolean                   @default(false)
+  chestPain             Boolean                   @default(false)
+  unconscious           Boolean                   @default(false)
+  seizure               Boolean                   @default(false)
+  poisoning             Boolean                   @default(false)
+  pregnancyComplications Boolean                  @default(false)
+  
+  // Triage Notes
+  triageNotes           String?
+  redFlags              String?                   // Warning signs
+  
+  // Reassessment
+  reassessmentRequired  Boolean                   @default(false)
+  reassessmentInterval  Int?                      // Minutes
+  lastReassessedAt      DateTime?
+  
+  // Triage Staff
+  triagedBy             String
+  triagedByName         String
+  triagedAt             DateTime                  @default(now())
+  
+  // Audit
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  
+  // Relations
+  emergencyVisit        EmergencyVisit            @relation(fields: [emergencyVisitId], references: [id], onDelete: Cascade)
+  
+  @@index([emergencyVisitId])
+  @@index([triageLevel])
+  @@index([triagedAt])
+  @@map("triage_assessments")
+}
+
+model EmergencyBed {
+  id                    String                    @id @default(uuid())
+  bedNumber             String                    @unique
+  bedName               String
+  location              String                    // Trauma Bay 1, Resuscitation Room, etc.
+  bedType               EmergencyBedType
+  
+  // Status
+  status                EmergencyBedStatus        @default(AVAILABLE)
+  isActive              Boolean                   @default(true)
+  
+  // Equipment
+  hasMonitor            Boolean                   @default(false)
+  hasVentilator         Boolean                   @default(false)
+  hasDefibrillator      Boolean                   @default(false)
+  hasOxygenSupply       Boolean                   @default(false)
+  hasSuctionApparatus   Boolean                   @default(false)
+  
+  // Current Occupancy
+  currentPatientId      String?
+  occupiedSince         DateTime?
+  expectedVacancyTime   DateTime?
+  
+  // Maintenance
+  lastCleanedAt         DateTime?
+  lastMaintenanceDate   DateTime?
+  notes                 String?
+  
+  // Audit
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  
+  // Relations
+  visits                EmergencyVisit[]
+  
+  @@index([status])
+  @@index([bedType])
+  @@map("emergency_beds")
+}
+
+model EmergencyVitals {
+  id                    String                    @id @default(uuid())
+  emergencyVisitId      String
+  
+  // Vital Signs
+  heartRate             Int?
+  bloodPressureSystolic Int?
+  bloodPressureDiastolic Int?
+  temperature           Float?
+  respiratoryRate       Int?
+  spO2                  Int?
+  painScore             Int?                      // 0-10
+  glucoseLevel          Float?
+  
+  // Additional Measurements
+  weight                Float?
+  height                Float?
+  bmi                   Float?
+  
+  // GCS (Glasgow Coma Scale)
+  gcsEye                Int?                      // 1-4
+  gcsVerbal             Int?                      // 1-5
+  gcsMotor              Int?                      // 1-6
+  gcsTotal              Int?                      // 3-15
+  
+  // Notes
+  notes                 String?
+  takenBy               String
+  takenByName           String
+  takenAt               DateTime                  @default(now())
+  
+  // Audit
+  createdAt             DateTime                  @default(now())
+  
+  // Relations
+  emergencyVisit        EmergencyVisit            @relation(fields: [emergencyVisitId], references: [id], onDelete: Cascade)
+  
+  @@index([emergencyVisitId])
+  @@index([takenAt])
+  @@map("emergency_vitals")
+}
+
+// ============================================
+// EMERGENCY DEPARTMENT ENUMS
+// ============================================
+
+enum EmergencyArrivalMode {
+  WALK_IN
+  AMBULANCE
+  POLICE
+  REFERRED
+  OTHER
+}
+
+enum TriageLevel {
+  LEVEL_1_RESUSCITATION   // Red - Immediate life-saving intervention
+  LEVEL_2_EMERGENT        // Orange - High risk, potential threat to life
+  LEVEL_3_URGENT          // Yellow - Could deteriorate, requires multiple resources
+  LEVEL_4_LESS_URGENT     // Green - Stable, requires simple intervention
+  LEVEL_5_NON_URGENT      // Blue - Chronic problem, could use clinic/OPD
+}
+
+enum EmergencyVisitStatus {
+  REGISTERED              // Just registered, waiting for triage
+  WAITING                 // Triaged, waiting for doctor
+  IN_TREATMENT            // Being seen by doctor
+  UNDER_OBSERVATION       // Observation period
+  AWAITING_RESULTS        // Waiting for lab/imaging results
+  READY_FOR_DISPOSITION   // Treatment complete, ready for disposition
+  DISCHARGED              // Discharged from ER
+  ADMITTED                // Admitted to IPD
+  TRANSFERRED             // Transferred to another facility
+  LEFT_AMA                // Left against medical advice
+  DECEASED                // Patient deceased
+}
+
+enum EmergencyDisposition {
+  DISCHARGE_HOME
+  ADMIT_TO_IPD
+  ADMIT_TO_ICU
+  TRANSFER_TO_ANOTHER_FACILITY
+  LEFT_AGAINST_MEDICAL_ADVICE
+  ABSCONDED
+  REFERRED_TO_SPECIALIST
+  DECEASED
+  BROUGHT_DEAD
+}
+
+enum EmergencyBedType {
+  RESUSCITATION
+  TRAUMA
+  GENERAL
+  PEDIATRIC
+  ISOLATION
+  OBSERVATION
+}
+
+enum EmergencyBedStatus {
+  AVAILABLE
+  OCCUPIED
+  CLEANING
+  MAINTENANCE
+  BLOCKED
 }

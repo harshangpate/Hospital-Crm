@@ -11,6 +11,9 @@ import {
     confirmLabTest,
     approveLabTestResults,
     rejectLabTestResults,
+    downloadLabReport,
+    generateBarcode,
+    getPatientLabHistory,
 } from '../controllers/labTest.controller';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -25,6 +28,9 @@ router.get('/stats', authorize('SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN', 'DOCTOR
 // Get lab analytics (charts data)
 router.get('/analytics', authorize('SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN', 'DOCTOR', 'PATIENT'), getLabAnalytics);
 
+// Get patient lab test history with trends
+router.get('/patient/:patientId/history', authorize('SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN', 'DOCTOR', 'NURSE', 'PATIENT'), getPatientLabHistory);
+
 // Get all lab tests with filters (patients can view their own tests)
 router.get('/', authorize('SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'PATIENT'), getLabTests);
 
@@ -33,6 +39,12 @@ router.post('/', authorize('SUPER_ADMIN', 'ADMIN', 'DOCTOR', 'NURSE', 'LAB_TECHN
 
 // Get specific lab test (patients can view their own test details)
 router.get('/:id', authorize('SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN', 'DOCTOR', 'NURSE', 'PATIENT'), getLabTestById);
+
+// Download lab test report PDF
+router.get('/:id/download', authorize('SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN', 'DOCTOR', 'NURSE', 'PATIENT'), downloadLabReport);
+
+// Generate sample barcode/QR code
+router.get('/:id/barcode', authorize('SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN'), generateBarcode);
 
 // Confirm lab test (Lab Technician confirms doctor's order)
 router.post('/:id/confirm', authorize('SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN'), confirmLabTest);

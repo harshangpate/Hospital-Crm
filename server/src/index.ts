@@ -25,6 +25,14 @@ import surgeryRoutes from './routes/surgery.routes';
 import operationTheaterRoutes from './routes/operationTheater.routes';
 import surgeryRecordsRoutes from './routes/surgeryRecords.routes';
 import equipmentRoutes from './routes/equipment.routes';
+import staffRoutes from './routes/staff.routes';
+import attendanceRoutes from './routes/attendance.routes';
+import leaveRoutes from './routes/leave.routes';
+import payrollRoutes from './routes/payroll.routes';
+import shiftRoutes from './routes/shift.routes';
+import performanceRoutes from './routes/performance.routes';
+import progressNoteRoutes from './routes/progressNote.routes';
+import emergencyRoutes from './routes/emergency.routes';
 import { startAppointmentReminderCron } from './cron/appointmentReminders';
 import { startDailyBedChargesCron } from './cron/dailyBedCharges';
 
@@ -132,6 +140,14 @@ app.use('/api/v1/surgeries', surgeryRoutes);
 app.use('/api/v1/operation-theaters', operationTheaterRoutes);
 app.use('/api/v1/surgery-records', surgeryRecordsRoutes);
 app.use('/api/v1/equipment', equipmentRoutes);
+app.use('/api/v1/staff', staffRoutes);
+app.use('/api/v1/attendance', attendanceRoutes);
+app.use('/api/v1/leaves', leaveRoutes);
+app.use('/api/v1/payroll', payrollRoutes);
+app.use('/api/v1/shifts', shiftRoutes);
+app.use('/api/v1/performance', performanceRoutes);
+app.use('/api/v1/progress-notes', progressNoteRoutes);
+app.use('/api/v1/emergency', emergencyRoutes);
 // app.use('/api/v1/patients', patientRoutes);
 // ... more routes
 

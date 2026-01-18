@@ -751,3 +751,175 @@ export async function sendInvoiceEmail(invoiceId: string, recipientEmail: string
     throw error;
   }
 }
+
+/**
+ * Send critical lab result alert email to doctor
+ */
+export async function sendCriticalLabAlert(
+  doctorEmail: string,
+  doctorName: string,
+  patientName: string,
+  testName: string,
+  testNumber: string,
+  result: string,
+  normalRange: string,
+  criticalReason: string
+) {
+  try {
+    const mailOptions: any = {
+      from: `"Hospital CRM - Lab Alerts" <${process.env.EMAIL_USER}>`,
+      to: doctorEmail,
+      subject: `🚨 URGENT: Critical Lab Result - ${patientName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .alert-box {
+              background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+              color: white;
+              padding: 20px;
+              border-radius: 10px;
+              margin: 20px 0;
+              text-align: center;
+            }
+            .alert-icon {
+              font-size: 48px;
+              margin-bottom: 10px;
+            }
+            .alert-title {
+              font-size: 24px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .info-box {
+              background: #f3f4f6;
+              border-left: 4px solid #dc2626;
+              padding: 15px;
+              margin: 20px 0;
+              border-radius: 5px;
+            }
+            .label {
+              font-weight: bold;
+              color: #4b5563;
+              display: inline-block;
+              width: 140px;
+            }
+            .value {
+              color: #1f2937;
+            }
+            .critical-value {
+              background: #fee2e2;
+              border: 2px solid #dc2626;
+              padding: 15px;
+              border-radius: 8px;
+              margin: 15px 0;
+              text-align: center;
+            }
+            .critical-value .result {
+              font-size: 28px;
+              font-weight: bold;
+              color: #dc2626;
+              margin: 10px 0;
+            }
+            .action-button {
+              display: inline-block;
+              background: #dc2626;
+              color: white;
+              padding: 12px 30px;
+              text-decoration: none;
+              border-radius: 5px;
+              margin: 20px 0;
+              font-weight: bold;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+              font-size: 12px;
+              color: #6b7280;
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="alert-box">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-title">CRITICAL LAB RESULT ALERT</div>
+            <p style="margin: 0;">Immediate attention required</p>
+          </div>
+          
+          <p>Dear Dr. ${doctorName},</p>
+          
+          <p><strong>A critical laboratory result requires your immediate attention.</strong></p>
+          
+          <div class="info-box">
+            <p><span class="label">Patient:</span> <span class="value">${patientName}</span></p>
+            <p><span class="label">Test Name:</span> <span class="value">${testName}</span></p>
+            <p><span class="label">Test Number:</span> <span class="value">${testNumber}</span></p>
+            <p><span class="label">Reported Date:</span> <span class="value">${new Date().toLocaleString()}</span></p>
+          </div>
+          
+          <div class="critical-value">
+            <p style="margin: 0; font-size: 14px; color: #6b7280;">RESULT VALUE</p>
+            <div class="result">${result}</div>
+            <p style="margin: 5px 0 0 0; color: #6b7280;">Normal Range: ${normalRange}</p>
+          </div>
+          
+          <div class="info-box" style="background: #fef2f2; border-left-color: #dc2626;">
+            <p style="margin: 0;"><strong>Critical Reason:</strong></p>
+            <p style="margin: 5px 0 0 0;">${criticalReason}</p>
+          </div>
+          
+          <p><strong>⚡ Action Required:</strong></p>
+          <ul>
+            <li>Review the complete lab report immediately</li>
+            <li>Assess patient's current condition</li>
+            <li>Initiate appropriate clinical intervention</li>
+            <li>Document your response and actions taken</li>
+          </ul>
+          
+          <div style="text-align: center;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/laboratory" class="action-button">
+              View Lab Report Now
+            </a>
+          </div>
+          
+          <p style="color: #dc2626; font-weight: bold; margin-top: 20px;">
+            ⏰ This alert requires immediate attention as per hospital protocol.
+          </p>
+          
+          <p>If you have already reviewed this result, please document your actions in the system.</p>
+          
+          <p>Best regards,<br>
+          Laboratory Department<br>
+          Hospital CRM</p>
+          
+          <div class="footer">
+            <p><strong>Hospital CRM</strong> | 123 Medical Center, Healthcare City</p>
+            <p>Phone: +91 1234567890 | Emergency Lab: Ext. 2345</p>
+            <p style="margin-top: 10px; font-style: italic;">
+              This is an automated alert. Please do not reply to this email.
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    const emailResult: any = await transporter.sendMail(mailOptions);
+    console.log('Critical lab alert sent:', emailResult.messageId);
+    return emailResult;
+  } catch (error) {
+    console.error('Send critical lab alert error:', error);
+    throw error;
+  }
+}

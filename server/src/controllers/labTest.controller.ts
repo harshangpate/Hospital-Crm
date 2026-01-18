@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { LabTestStatus } from '@prisma/client';
 import { checkCriticalValue, checkKnownCriticalTest } from '../utils/criticalValueChecker';
+import { generateLabReportPDF } from '../utils/pdfGenerator';
+import { sendCriticalLabAlert } from '../utils/emailService';
+import { generateSampleBarcode } from '../utils/barcodeGenerator';
 
 // ============================================
 // CREATE LAB TEST ORDER
@@ -137,7 +140,13 @@ export const getLabTests = async (req: Request, res: Response) => {
     }
 
     if (status) {
-      where.status = status;
+      // Handle multiple statuses (comma-separated)
+      if (typeof status === 'string' && status.includes(',')) {
+        const statuses = status.split(',').map(s => s.trim());
+        where.status = { in: statuses };
+      } else {
+        where.status = status;
+      }
     }
 
     if (patientId) {
@@ -423,7 +432,21 @@ export const submitLabResults = async (req: Request, res: Response) => {
             },
           });
 
+          const doctor = await tx.staff.findUnique({
+            where: { id: updated.doctorId },
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                },
+              },
+            },
+          });
+
           if (patient) {
+            // Create in-app notification
             await tx.notification.create({
               data: {
                 userId: updated.doctorId,
@@ -434,6 +457,25 @@ export const submitLabResults = async (req: Request, res: Response) => {
                 linkUrl: `/dashboard/laboratory/${updated.id}`,
               },
             });
+
+            // Send email alert to doctor
+            if (doctor && doctor.user.email) {
+              try {
+                await sendCriticalLabAlert(
+                  doctor.user.email,
+                  `${doctor.user.firstName} ${doctor.user.lastName}`,
+                  `${patient.user.firstName} ${patient.user.lastName}`,
+                  updated.testName,
+                  updated.testNumber,
+                  results,
+                  normalRange || 'Not specified',
+                  criticalReason
+                );
+              } catch (emailError) {
+                console.error('Failed to send critical alert email:', emailError);
+                // Don't fail the transaction if email fails
+              }
+            }
           }
         } catch (notifError) {
           console.error('Failed to create critical result notification:', notifError);
@@ -1075,6 +1117,284 @@ export const rejectLabTestResults = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Error rejecting lab test results',
+      error: error.message,
+    });
+  }
+};
+
+// ============================================
+// DOWNLOAD LAB TEST REPORT PDF
+// ============================================
+
+export const downloadLabReport = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Check if test exists
+    const labTest = await prisma.labTest.findUnique({
+      where: { id },
+      select: { id: true, status: true },
+    });
+
+    if (!labTest) {
+      return res.status(404).json({
+        success: false,
+        message: 'Lab test not found',
+      });
+    }
+
+    // Generate and stream PDF
+    await generateLabReportPDF(id, res);
+  } catch (error: any) {
+    console.error('Download lab report error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error generating lab report',
+      error: error.message,
+    });
+  }
+};
+
+// ============================================
+// GENERATE SAMPLE BARCODE
+// ============================================
+
+export const generateBarcode = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const labTest = await prisma.labTest.findUnique({
+      where: { id },
+      select: { id: true, testNumber: true, sampleBarcode: true },
+    });
+
+    if (!labTest) {
+      return res.status(404).json({
+        success: false,
+        message: 'Lab test not found',
+      });
+    }
+
+    // Generate barcode if not already generated
+    let barcodeData = labTest.sampleBarcode;
+    
+    if (!barcodeData) {
+      // Use test number as sample ID
+      const sampleId = labTest.testNumber;
+      barcodeData = await generateSampleBarcode(sampleId);
+
+      // Update lab test with barcode
+      await prisma.labTest.update({
+        where: { id },
+        data: { sampleBarcode: barcodeData },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Barcode generated successfully',
+      data: {
+        sampleId: labTest.testNumber,
+        barcode: barcodeData,
+      },
+    });
+  } catch (error: any) {
+    console.error('Generate barcode error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error generating barcode',
+      error: error.message,
+    });
+  }
+};
+
+// ============================================
+// GET PATIENT LAB TEST HISTORY
+// ============================================
+
+export const getPatientLabHistory = async (req: Request, res: Response) => {
+  try {
+    const { patientId } = req.params;
+    const { testName, startDate, endDate } = req.query;
+
+    // Validate patient exists
+    const patient = await prisma.patient.findUnique({
+      where: { id: patientId },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            dateOfBirth: true,
+            gender: true,
+          },
+        },
+      },
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found',
+      });
+    }
+
+    // Build query filters
+    const where: any = {
+      patientId,
+      status: LabTestStatus.COMPLETED, // Only show completed tests with results
+      results: { not: null }, // Must have results
+    };
+
+    // Filter by test name if provided
+    if (testName) {
+      where.testName = testName as string;
+    }
+
+    // Filter by date range if provided
+    if (startDate || endDate) {
+      where.orderedDate = {};
+      if (startDate) {
+        where.orderedDate.gte = new Date(startDate as string);
+      }
+      if (endDate) {
+        where.orderedDate.lte = new Date(endDate as string);
+      }
+    }
+
+    // Fetch lab tests
+    const labTests = await prisma.labTest.findMany({
+      where,
+      orderBy: {
+        orderedDate: 'desc',
+      },
+    });
+
+    // Fetch doctor information for tests that have doctorId
+    const labTestsWithDoctors = await Promise.all(
+      labTests.map(async (test) => {
+        if (test.doctorId) {
+          const doctor = await prisma.doctor.findUnique({
+            where: { id: test.doctorId },
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          });
+          return { ...test, doctor };
+        }
+        return { ...test, doctor: null };
+      })
+    );
+
+    // Get unique test names for this patient
+    const uniqueTestNames = await prisma.labTest.findMany({
+      where: {
+        patientId,
+        status: LabTestStatus.COMPLETED,
+        results: { not: null },
+      },
+      select: {
+        testName: true,
+      },
+      distinct: ['testName'],
+      orderBy: {
+        testName: 'asc',
+      },
+    });
+
+    // Calculate test statistics for trend analysis
+    const testStats: any = {};
+    
+    // Group tests by test name
+    const testsByName = labTestsWithDoctors.reduce((acc: any, test) => {
+      if (!acc[test.testName]) {
+        acc[test.testName] = [];
+      }
+      acc[test.testName].push(test);
+      return acc;
+    }, {});
+
+    // Calculate stats for each test type
+    Object.keys(testsByName).forEach((name) => {
+      const tests = testsByName[name];
+      const numericResults = tests
+        .map((t: any) => {
+          // Try to extract numeric value from result string
+          const match = t.results?.match(/[\d.]+/);
+          return match ? parseFloat(match[0]) : null;
+        })
+        .filter((val: any) => val !== null);
+
+      if (numericResults.length > 0) {
+        testStats[name] = {
+          count: tests.length,
+          min: Math.min(...numericResults),
+          max: Math.max(...numericResults),
+          avg: numericResults.reduce((sum: number, val: number) => sum + val, 0) / numericResults.length,
+          latest: numericResults[0],
+          trend: numericResults.length >= 2 ? (
+            numericResults[0] > numericResults[1] ? 'increasing' :
+            numericResults[0] < numericResults[1] ? 'decreasing' : 'stable'
+          ) : 'insufficient_data',
+        };
+      } else {
+        testStats[name] = {
+          count: tests.length,
+          hasNumericData: false,
+        };
+      }
+    });
+
+    // Check for abnormal trends (3+ consecutive abnormal results)
+    const abnormalTrends: any[] = [];
+    Object.keys(testsByName).forEach((name) => {
+      const tests = testsByName[name];
+      let consecutiveAbnormal = 0;
+      
+      for (const test of tests) {
+        if (test.isCritical || test.isAbnormal) {
+          consecutiveAbnormal++;
+          if (consecutiveAbnormal >= 3) {
+            abnormalTrends.push({
+              testName: name,
+              consecutiveCount: consecutiveAbnormal,
+              latestResult: test.results,
+              latestDate: test.orderedDate,
+            });
+            break;
+          }
+        } else {
+          consecutiveAbnormal = 0;
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        patient: {
+          id: patient.id,
+          name: `${patient.user.firstName} ${patient.user.lastName}`,
+          dateOfBirth: patient.user.dateOfBirth,
+          gender: patient.user.gender,
+        },
+        tests: labTestsWithDoctors,
+        uniqueTestNames: uniqueTestNames.map((t) => t.testName),
+        statistics: testStats,
+        abnormalTrends,
+        totalTests: labTestsWithDoctors.length,
+      },
+    });
+  } catch (error: any) {
+    console.error('Get patient lab history error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching patient lab history',
       error: error.message,
     });
   }

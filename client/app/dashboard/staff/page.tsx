@@ -58,7 +58,7 @@ interface StaffStats {
 
 export default function StaffPage() {
   return (
-    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']}>
       <StaffContent />
     </ProtectedRoute>
   );

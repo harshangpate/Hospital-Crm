@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import SampleBarcode from '@/components/laboratory/SampleBarcode';
 import { 
   ArrowLeft, 
   TestTube2, 
@@ -13,7 +14,9 @@ import {
   Edit,
   Save,
   X,
-  Printer
+  Printer,
+  Download,
+  Activity
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -299,6 +302,36 @@ export default function LabTestDetailPage() {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/lab-tests/${params.id}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `lab-report-${labTest?.testNumber || 'report'}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Failed to download report');
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Error downloading report');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const styles: { [key: string]: string } = {
       ORDERED: 'bg-yellow-100 text-yellow-800',
@@ -402,19 +435,36 @@ export default function LabTestDetailPage() {
             </h1>
             <p className="text-gray-600 mt-2">{labTest.testName}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link
+              href={`/dashboard/laboratory/history/${labTest.patient.id}`}
+              className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+            >
+              <Activity className="h-5 w-5" />
+              View History
+            </Link>
+            
             {labTest.status === 'COMPLETED' && labTest.results && (
-              <button
-                onClick={() => window.print()}
-                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-              >
-                <Printer className="h-5 w-5" />
-                Print Report
-              </button>
+              <>
+                <button
+                  onClick={handleDownloadPDF}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  <Download className="h-5 w-5" />
+                  Download PDF
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                >
+                  <Printer className="h-5 w-5" />
+                  Print Report
+                </button>
+              </>
             )}
             
-            {/* Approval Workflow Buttons - Show for SUPER_ADMIN and ADMIN only */}
-            {labTest.status === 'PENDING_APPROVAL' && ['SUPER_ADMIN', 'ADMIN'].includes(user?.role || '') && (
+            {/* Approval Workflow Buttons - Show for SUPER_ADMIN, ADMIN, and LAB_TECHNICIAN */}
+            {labTest.status === 'PENDING_APPROVAL' && ['SUPER_ADMIN', 'ADMIN', 'LAB_TECHNICIAN'].includes(user?.role || '') && (
               <>
                 <button
                   onClick={handleApproveResults}
@@ -658,6 +708,23 @@ export default function LabTestDetailPage() {
                     )}
                   </div>
                 </div>
+                
+                {/* QR Code/Barcode Generation Section */}
+                {(labTest.status === 'SAMPLE_COLLECTED' || labTest.status === 'IN_PROGRESS' || labTest.status === 'COMPLETED') && (
+                  <div className="mt-6 pt-6 border-t">
+                    <SampleBarcode 
+                      testId={labTest.id}
+                      testNumber={labTest.testNumber}
+                      patientName={`${labTest.patient.user.firstName} ${labTest.patient.user.lastName}`}
+                      testName={labTest.testName}
+                      sampleType={labTest.sampleType || undefined}
+                      onBarcodeGenerated={(barcodeData) => {
+                        // Optionally refresh the lab test data to show the new barcode
+                        console.log('Barcode generated:', barcodeData);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

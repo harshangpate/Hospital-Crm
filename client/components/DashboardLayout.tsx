@@ -290,6 +290,48 @@ const menuItems: MenuItem[] = [
     roles: ['ADMIN', 'SUPER_ADMIN'],
   },
   {
+    icon: Briefcase,
+    label: 'HR Management',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'],
+    submenu: [
+      {
+        label: 'HR Portal',
+        href: '/dashboard/staff/hr',
+        icon: Home,
+      },
+      {
+        label: 'Attendance',
+        href: '/dashboard/staff/hr/attendance',
+        icon: Clock,
+      },
+      {
+        label: 'Leave Management',
+        href: '/dashboard/staff/hr/leaves',
+        icon: Calendar,
+      },
+      {
+        label: 'Payroll',
+        href: '/dashboard/staff/hr/payroll',
+        icon: DollarSign,
+      },
+      {
+        label: 'Shift Scheduling',
+        href: '/dashboard/staff/hr/shifts',
+        icon: ClipboardList,
+      },
+      {
+        label: 'Performance',
+        href: '/dashboard/staff/hr/performance',
+        icon: TrendingUp,
+      },
+      {
+        label: 'Staff Directory',
+        href: '/dashboard/staff',
+        icon: Users,
+      },
+    ],
+  },
+  {
     icon: Settings,
     label: 'Settings',
     href: '/dashboard/settings',

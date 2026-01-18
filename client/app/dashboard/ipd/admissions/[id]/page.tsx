@@ -299,7 +299,7 @@ function AdmissionDetails() {
                 Admission #{admission.admissionNumber}
               </p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 flex-wrap">
               <span
                 className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(
                   admission.status
@@ -307,6 +307,13 @@ function AdmissionDetails() {
               >
                 {admission.status}
               </span>
+              <Link
+                href={`/dashboard/ipd/progress-notes/${admission.id}`}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Progress Notes</span>
+              </Link>
               <button
                 onClick={() => {
                   fetchAdmission();

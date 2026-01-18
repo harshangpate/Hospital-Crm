@@ -15,6 +15,7 @@ const USER_ROLES = [
   { value: 'LAB_TECHNICIAN', label: 'Lab Technician', requiresExtra: false },
   { value: 'RADIOLOGIST', label: 'Radiologist', requiresExtra: false },
   { value: 'ACCOUNTANT', label: 'Accountant', requiresExtra: false },
+  { value: 'HR_MANAGER', label: 'HR Manager', requiresExtra: false },
   { value: 'PATIENT', label: 'Patient', requiresExtra: false },
   { value: 'ADMIN', label: 'Admin', requiresExtra: false }
 ];
@@ -67,7 +68,8 @@ export default function CreateUserPage() {
   const selectedRole = USER_ROLES.find(r => r.value === formData.role);
   const isDoctor = formData.role === 'DOCTOR';
   const isPatient = formData.role === 'PATIENT';
-  const isStaff = !isDoctor && !isPatient && formData.role !== 'ADMIN';
+  const isStaff = !isDoctor && !isPatient && formData.role !== 'ADMIN' && formData.role !== 'HR_MANAGER';
+  const isHR = formData.role === 'HR_MANAGER';
 
   return (
     <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>

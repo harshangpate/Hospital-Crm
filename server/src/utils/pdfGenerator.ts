@@ -870,3 +870,406 @@ export const generateMedicalRecordPDF = async (recordId: string, res: Response) 
     throw error;
   }
 };
+
+// ============================================
+// LAB TEST REPORT PDF GENERATOR
+// ============================================
+
+export const generateLabReportPDF = async (testId: string, res: Response) => {
+  try {
+    // Fetch lab test with all relations
+    const labTest = await prisma.labTest.findUnique({
+      where: { id: testId },
+      include: {
+        patient: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (!labTest) {
+      throw new Error('Lab test not found');
+    }
+
+    // Fetch doctor separately if doctorId exists
+    let doctor: any = null;
+    if (labTest.doctorId) {
+      doctor = await prisma.doctor.findUnique({
+        where: { id: labTest.doctorId },
+        include: {
+          user: true,
+        },
+      });
+    }
+
+    const doc = new PDFDocument({ size: 'A4', margin: 48 });
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=lab-report-${labTest.testNumber}.pdf`
+    );
+
+    doc.pipe(res);
+
+    // Modern header with medical theme
+    drawModernHeader(
+      doc,
+      'LABORATORY TEST REPORT',
+      'Comprehensive Diagnostic Analysis',
+      '#0EA5E9',
+      '#0284C7'
+    );
+
+    doc.y = 130;
+
+    // Report metadata badge
+    const metaY = doc.y;
+    doc.roundedRect(48, metaY, 260, 50, 8).fillOpacity(0.05).fill('#0EA5E9');
+    doc.fillOpacity(1);
+
+    doc
+      .fontSize(9)
+      .fillColor('#64748B')
+      .font('Helvetica-Bold')
+      .text('REPORT NUMBER', 58, metaY + 10)
+      .fontSize(13)
+      .fillColor('#0F172A')
+      .text(labTest.testNumber, 58, metaY + 26);
+
+    doc.roundedRect(320, metaY, 244, 50, 8).fillOpacity(0.05).fill('#0EA5E9');
+    doc.fillOpacity(1);
+
+    doc
+      .fontSize(9)
+      .fillColor('#64748B')
+      .font('Helvetica-Bold')
+      .text('REPORT DATE', 330, metaY + 10)
+      .fontSize(13)
+      .fillColor('#0F172A')
+      .text(
+        labTest.resultDate
+          ? new Date(labTest.resultDate).toLocaleDateString('en-US', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })
+          : 'Pending',
+        330,
+        metaY + 26
+      );
+
+    doc.y = metaY + 70;
+
+    // Patient Information Section
+    doc
+      .fontSize(14)
+      .fillColor('#0F172A')
+      .font('Helvetica-Bold')
+      .text('PATIENT INFORMATION', 48, doc.y);
+
+    doc.y += 15;
+    const patientBoxY = doc.y;
+
+    // Patient info with modern styling
+    doc.roundedRect(48, patientBoxY, 516, 90, 10).fillOpacity(0.03).fill('#0EA5E9').strokeColor('#E0F2FE').lineWidth(1).stroke();
+    doc.fillOpacity(1);
+
+    // Left column
+    doc
+      .fontSize(9)
+      .fillColor('#64748B')
+      .font('Helvetica-Bold')
+      .text('Patient ID', 62, patientBoxY + 18)
+      .fontSize(11)
+      .fillColor('#0F172A')
+      .font('Helvetica')
+      .text(labTest.patient.patientId, 62, patientBoxY + 34);
+
+    doc
+      .fontSize(9)
+      .fillColor('#64748B')
+      .font('Helvetica-Bold')
+      .text('Patient Name', 200, patientBoxY + 18)
+      .fontSize(11)
+      .fillColor('#0F172A')
+      .font('Helvetica')
+      .text(
+        `${labTest.patient.user.firstName} ${labTest.patient.user.lastName}`,
+        200,
+        patientBoxY + 34
+      );
+
+    // Right column
+    if (labTest.patient.user.gender) {
+      doc
+        .fontSize(9)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('Gender', 380, patientBoxY + 18)
+        .fontSize(11)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(labTest.patient.user.gender, 380, patientBoxY + 34);
+    }
+
+    if (labTest.patient.user.dateOfBirth) {
+      const age = Math.floor(
+        (Date.now() - new Date(labTest.patient.user.dateOfBirth).getTime()) /
+          (365.25 * 24 * 60 * 60 * 1000)
+      );
+      doc
+        .fontSize(9)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('Age', 480, patientBoxY + 18)
+        .fontSize(11)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(`${age} yrs`, 480, patientBoxY + 34);
+    }
+
+    if (labTest.patient.user.phone) {
+      doc
+        .fontSize(9)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('Contact', 62, patientBoxY + 58)
+        .fontSize(11)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(labTest.patient.user.phone, 62, patientBoxY + 74);
+    }
+
+    doc.y = patientBoxY + 110;
+
+    // Test Information Section
+    doc
+      .fontSize(14)
+      .fillColor('#0F172A')
+      .font('Helvetica-Bold')
+      .text('TEST INFORMATION', 48, doc.y);
+
+    doc.y += 15;
+    const testBoxY = doc.y;
+
+    doc.roundedRect(48, testBoxY, 516, 70, 10).fillOpacity(0.03).fill('#0EA5E9').strokeColor('#E0F2FE').lineWidth(1).stroke();
+    doc.fillOpacity(1);
+
+    doc
+      .fontSize(9)
+      .fillColor('#64748B')
+      .font('Helvetica-Bold')
+      .text('Test Name', 62, testBoxY + 15)
+      .fontSize(12)
+      .fillColor('#0F172A')
+      .font('Helvetica-Bold')
+      .text(labTest.testName, 62, testBoxY + 32);
+
+    doc
+      .fontSize(9)
+      .fillColor('#64748B')
+      .font('Helvetica-Bold')
+      .text('Category', 350, testBoxY + 15)
+      .fontSize(11)
+      .fillColor('#0F172A')
+      .font('Helvetica')
+      .text(labTest.testCategory, 350, testBoxY + 32);
+
+    doc
+      .fontSize(9)
+      .fillColor('#64748B')
+      .font('Helvetica-Bold')
+      .text('Ordered Date', 62, testBoxY + 54)
+      .fontSize(10)
+      .fillColor('#0F172A')
+      .font('Helvetica')
+      .text(new Date(labTest.orderedDate).toLocaleDateString(), 160, testBoxY + 54);
+
+    if (labTest.collectionDate) {
+      doc
+        .fontSize(9)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('Collection Date', 280, testBoxY + 54)
+        .fontSize(10)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(new Date(labTest.collectionDate).toLocaleDateString(), 400, testBoxY + 54);
+    }
+
+    doc.y = testBoxY + 90;
+
+    // Test Results Section
+    doc
+      .fontSize(14)
+      .fillColor('#0F172A')
+      .font('Helvetica-Bold')
+      .text('TEST RESULTS', 48, doc.y);
+
+    doc.y += 15;
+    const resultsBoxY = doc.y;
+
+    // Results with highlighted background
+    const resultBgColor = labTest.isCritical ? '#FEE2E2' : '#F0F9FF';
+    const resultBorderColor = labTest.isCritical ? '#FCA5A5' : '#BAE6FD';
+
+    doc
+      .roundedRect(48, resultsBoxY, 516, 120, 10)
+      .fillOpacity(labTest.isCritical ? 0.3 : 0.5)
+      .fill(resultBgColor)
+      .strokeColor(resultBorderColor)
+      .lineWidth(2)
+      .stroke();
+    doc.fillOpacity(1);
+
+    // Critical badge if applicable
+    if (labTest.isCritical) {
+      doc
+        .roundedRect(460, resultsBoxY + 15, 90, 25, 12)
+        .fill('#DC2626');
+      doc
+        .fontSize(10)
+        .fillColor('#FFFFFF')
+        .font('Helvetica-Bold')
+        .text('⚠ CRITICAL', 470, resultsBoxY + 22);
+    }
+
+    doc
+      .fontSize(9)
+      .fillColor('#64748B')
+      .font('Helvetica-Bold')
+      .text('RESULT VALUE', 62, resultsBoxY + 20)
+      .fontSize(16)
+      .fillColor(labTest.isCritical ? '#DC2626' : '#0F172A')
+      .font('Helvetica-Bold')
+      .text(labTest.results || 'Pending', 62, resultsBoxY + 38);
+
+    if (labTest.normalRange) {
+      doc
+        .fontSize(9)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('Normal Range', 62, resultsBoxY + 68)
+        .fontSize(11)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(labTest.normalRange, 160, resultsBoxY + 68);
+    }
+
+    if (labTest.interpretation) {
+      doc
+        .fontSize(9)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('Interpretation', 62, resultsBoxY + 92)
+        .fontSize(10)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(labTest.interpretation, 62, resultsBoxY + 108, { width: 480 });
+    }
+
+    doc.y = resultsBoxY + 140;
+
+    // Lab Notes
+    if (labTest.labNotes) {
+      doc
+        .fontSize(12)
+        .fillColor('#0F172A')
+        .font('Helvetica-Bold')
+        .text('LABORATORY NOTES', 48, doc.y);
+
+      doc.y += 12;
+      doc.roundedRect(48, doc.y, 516, 50, 8).fillOpacity(0.03).fill('#94A3B8');
+      doc.fillOpacity(1);
+
+      doc
+        .fontSize(10)
+        .fillColor('#475569')
+        .font('Helvetica')
+        .text(labTest.labNotes, 62, doc.y + 15, { width: 488 });
+
+      doc.y += 65;
+    }
+
+    // Signatures Section
+    const sigY = 680;
+    doc.strokeColor('#E2E8F0').lineWidth(1).moveTo(48, sigY).lineTo(564, sigY).stroke();
+
+    doc
+      .fontSize(11)
+      .fillColor('#0F172A')
+      .font('Helvetica-Bold')
+      .text('AUTHORIZED SIGNATURES', 48, sigY + 15);
+
+    // Performed by
+    if (labTest.performedBy) {
+      doc.roundedRect(48, sigY + 40, 150, 50, 8).fillOpacity(0.03).fill('#0EA5E9');
+      doc.fillOpacity(1);
+
+      doc
+        .fontSize(8)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('PERFORMED BY', 58, sigY + 48)
+        .fontSize(10)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(labTest.performedBy, 58, sigY + 63);
+    }
+
+    // Verified by
+    if (labTest.verifiedBy) {
+      doc.roundedRect(210, sigY + 40, 150, 50, 8).fillOpacity(0.03).fill('#10B981');
+      doc.fillOpacity(1);
+
+      doc
+        .fontSize(8)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('VERIFIED BY', 220, sigY + 48)
+        .fontSize(10)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(labTest.verifiedBy, 220, sigY + 63);
+    }
+
+    // Ordered by
+    if (doctor) {
+      doc.roundedRect(372, sigY + 40, 192, 50, 8).fillOpacity(0.03).fill('#8B5CF6');
+      doc.fillOpacity(1);
+
+      doc
+        .fontSize(8)
+        .fillColor('#64748B')
+        .font('Helvetica-Bold')
+        .text('ORDERED BY', 382, sigY + 48)
+        .fontSize(10)
+        .fillColor('#0F172A')
+        .font('Helvetica')
+        .text(
+          `Dr. ${doctor.user.firstName} ${doctor.user.lastName}`,
+          382,
+          sigY + 63
+        );
+
+      if (doctor.specialization) {
+        doc
+          .fontSize(8)
+          .fillColor('#64748B')
+          .text(doctor.specialization, 382, sigY + 78);
+      }
+    }
+
+    // Modern footer
+    drawModernFooter(doc, 770, '#0EA5E9', '🔒 Confidential Laboratory Report - For Medical Use Only');
+
+    doc.end();
+  } catch (error) {
+    console.error('Lab PDF generation error:', error);
+    throw error;
+  }
+};

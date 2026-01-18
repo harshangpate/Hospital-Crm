@@ -257,13 +257,23 @@ export const getAdmissionById = async (req: Request, res: Response) => {
     });
 
     if (!admission) {
-      return res.status(404).json({ message: 'Admission not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Admission not found' 
+      });
     }
 
-    res.json({ data: admission });
+    res.json({ 
+      success: true,
+      data: admission 
+    });
   } catch (error: any) {
     console.error('Error fetching admission:', error);
-    res.status(500).json({ message: 'Failed to fetch admission', error: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch admission', 
+      error: error.message 
+    });
   }
 };
 
@@ -352,7 +362,25 @@ export const updateAdmission = async (req: Request, res: Response) => {
 export const dischargePatient = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { dischargeSummary, dischargeInstructions } = req.body;
+    const { 
+      dischargeDate,
+      dischargeSummary, 
+      finalDiagnosis,
+      treatmentProvided,
+      medicationsOnDischarge,
+      followUpInstructions,
+      followUpDate,
+      dischargedBy,
+      patientCondition,
+      dischargeType
+    } = req.body;
+
+    // Validation
+    if (!dischargeSummary || !finalDiagnosis || !dischargedBy) {
+      return res.status(400).json({ 
+        message: 'Discharge summary, final diagnosis, and discharging doctor are required' 
+      });
+    }
 
     const admission = await prisma.admission.findUnique({
       where: { id },
@@ -360,6 +388,11 @@ export const dischargePatient = async (req: Request, res: Response) => {
         bed: {
           include: {
             ward: true,
+          },
+        },
+        patient: {
+          include: {
+            user: true,
           },
         },
       },
@@ -452,14 +485,21 @@ export const dischargePatient = async (req: Request, res: Response) => {
       });
     }
 
-    // Update admission
+    // Update admission with complete discharge details
     const updatedAdmission = await prisma.admission.update({
       where: { id },
       data: {
         status: 'DISCHARGED',
-        dischargeDate: new Date(),
+        dischargeDate: dischargeDate ? new Date(dischargeDate) : new Date(),
         dischargeSummary,
-        dischargeInstructions,
+        dischargeInstructions: followUpInstructions || null,
+        finalDiagnosis: finalDiagnosis || null,
+        treatmentProvided: treatmentProvided || null,
+        medicationsOnDischarge: medicationsOnDischarge || null,
+        followUpDate: followUpDate ? new Date(followUpDate) : null,
+        dischargedBy: dischargedBy || null,
+        patientCondition: patientCondition || 'STABLE',
+        dischargeType: dischargeType || 'ROUTINE',
       },
       include: {
         patient: {
@@ -476,6 +516,23 @@ export const dischargePatient = async (req: Request, res: Response) => {
         },
       },
     });
+
+    // Create notification for patient
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: admission.patient.userId,
+          title: 'Discharge Summary Available',
+          message: `You have been discharged from ${admission.bed?.ward.wardName || 'the hospital'}. Your discharge summary is now available.`,
+          type: 'INFO',
+          linkText: 'View Summary',
+          linkUrl: `/dashboard/ipd/admissions/${admission.id}`,
+        },
+      });
+    } catch (notifError) {
+      console.error('Failed to create discharge notification:', notifError);
+      // Don't fail the discharge if notification fails
+    }
 
     res.json({
       message: 'Patient discharged successfully',

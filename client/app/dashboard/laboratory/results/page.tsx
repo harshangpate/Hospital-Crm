@@ -110,6 +110,30 @@ function ResultEntryContent() {
     }
   };
 
+  const checkCriticalValue = (value: string, range: string): boolean => {
+    if (!value || !range) return false;
+
+    try {
+      // Extract numeric value from result
+      const numericValue = parseFloat(value.replace(/[^\d.-]/g, ''));
+      if (isNaN(numericValue)) return false;
+
+      // Parse normal range (e.g., "3.5-5.5", "< 140", "> 10")
+      const rangeMatch = range.match(/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/);
+      if (rangeMatch) {
+        const min = parseFloat(rangeMatch[1]);
+        const max = parseFloat(rangeMatch[2]);
+        // Critical if significantly outside range (>50% beyond limits)
+        const lowerCritical = min - (max - min) * 0.5;
+        const upperCritical = max + (max - min) * 0.5;
+        return numericValue < lowerCritical || numericValue > upperCritical;
+      }
+    } catch (e) {
+      return false;
+    }
+    return false;
+  };
+
   const handleSubmitResults = async () => {
     if (!token || !testId) return;
 
@@ -122,6 +146,18 @@ function ResultEntryContent() {
     if (!performedBy.trim()) {
       alert('Please enter who performed the test');
       return;
+    }
+
+    // Check for critical values
+    const isCriticalValue = checkCriticalValue(results, normalRange);
+    if (isCriticalValue || isCritical) {
+      const confirmCritical = confirm(
+        '⚠️ WARNING: This result appears to be CRITICAL!\n\n' +
+        'Critical values require immediate physician notification.\n' +
+        'Have you notified the attending physician?\n\n' +
+        'Click OK to continue submission.'
+      );
+      if (!confirmCritical) return;
     }
 
     try {
@@ -146,7 +182,12 @@ function ResultEntryContent() {
       );
 
       if (response.ok) {
-        alert('Results submitted successfully!');
+        const resultData = await response.json();
+        if (resultData.data?.isCritical) {
+          alert('⚠️ CRITICAL RESULT SUBMITTED!\n\nThe attending physician has been automatically notified.');
+        } else {
+          alert('✅ Results submitted successfully and sent for approval!');
+        }
         router.push('/dashboard/laboratory/pending');
       } else {
         const error = await response.json();

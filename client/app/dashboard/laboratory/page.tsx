@@ -51,9 +51,11 @@ interface LabTest {
 
 interface Stats {
   totalTests: number;
+  pendingConfirmation: number;
   orderedTests: number;
   sampleCollectedTests: number;
   inProgressTests: number;
+  pendingApprovalTests: number;
   completedTests: number;
   todayTests: number;
 }
@@ -292,13 +294,28 @@ export default function LaboratoryPortal() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6 }}
+                className="flex gap-2"
               >
                 <Link
-                  href="/dashboard/laboratory/analytics"
-                  className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-white/30 transition-all shadow-lg"
+                  href="/dashboard/laboratory/samples"
+                  className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/30 transition-all shadow-lg text-sm"
                 >
-                  <FileText className="h-5 w-5" />
-                  View Analytics
+                  <TestTube2 className="h-4 w-4" />
+                  Samples
+                </Link>
+                <Link
+                  href="/dashboard/laboratory/approval"
+                  className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/30 transition-all shadow-lg text-sm"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Approvals
+                </Link>
+                <Link
+                  href="/dashboard/laboratory/analytics"
+                  className="flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:bg-white/30 transition-all shadow-lg text-sm"
+                >
+                  <FileText className="h-4 w-4" />
+                  Analytics
                 </Link>
               </motion.div>
             </div>
@@ -313,6 +330,13 @@ export default function LaboratoryPortal() {
                 value={stats.totalTests.toString()}
                 gradient="from-gray-500 to-gray-600"
                 delay={0.1}
+              />
+              <StatCardComponent
+                icon={<AlertCircle className="w-6 h-6" />}
+                title="Pending Confirmation"
+                value={stats.pendingConfirmation?.toString() || '0'}
+                gradient="from-gray-500 to-gray-700"
+                delay={0.12}
               />
               <StatCardComponent
                 icon={<Clock className="w-6 h-6" />}
@@ -376,9 +400,11 @@ export default function LaboratoryPortal() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
             >
               <option value="">All Statuses</option>
+              <option value="PENDING_CONFIRMATION">Pending Confirmation</option>
               <option value="ORDERED">Ordered</option>
               <option value="SAMPLE_COLLECTED">Sample Collected</option>
               <option value="IN_PROGRESS">In Progress</option>
+              <option value="PENDING_APPROVAL">Pending Approval</option>
               <option value="COMPLETED">Completed</option>
             </select>
           </div>
@@ -415,27 +441,27 @@ export default function LaboratoryPortal() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                   Test Number
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-44">
                   Patient
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">
                   Test Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-52">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-44">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ordered Date
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-28">
+                  Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-56">
                   Actions
                 </th>
               </tr>
@@ -443,41 +469,60 @@ export default function LaboratoryPortal() {
             <tbody className="bg-white divide-y divide-gray-200">
               {labTests.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    No lab tests found
+                  <td colSpan={7} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <TestTube2 className="h-12 w-12 mb-3 text-gray-300" />
+                      <p className="text-lg font-medium">No lab tests found</p>
+                      <p className="text-sm mt-1">Try adjusting your filters</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 labTests.map((test) => (
-                  <tr key={test.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                      {test.testNumber}
+                  <tr key={test.id} className="hover:bg-blue-50/50 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="text-sm font-semibold text-blue-600">
+                        {test.testNumber}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium text-gray-900 truncate max-w-[160px]">
                         {test.patient.user.firstName} {test.patient.user.lastName}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-xs text-gray-500">
                         {test.patient.patientId}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center gap-2">
-                        <span>{test.testName}</span>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium text-gray-900 truncate max-w-[140px]" title={test.testName}>
+                          {test.testName}
+                        </span>
                         {test.isCritical && (
-                          <AlertCircle className="h-4 w-4 text-red-600" />
+                          <AlertCircle className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {test.testCategory}
+                    <td className="px-4 py-3">
+                      <div className="text-xs text-gray-600 leading-relaxed max-w-[200px]">
+                        {test.testCategory.split(',').slice(0, 3).map((cat, idx) => (
+                          <span key={idx} className="inline-block bg-gray-100 px-2 py-0.5 rounded mr-1 mb-1">
+                            {cat.trim()}
+                          </span>
+                        ))}
+                        {test.testCategory.split(',').length > 3 && (
+                          <span className="inline-block text-gray-400 text-xs">
+                            +{test.testCategory.split(',').length - 3}
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {getStatusBadge(test.status)}
                         {test.isCritical && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-bold text-red-700 bg-red-100 rounded-full border border-red-300 animate-pulse">
-                            <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold text-red-700 bg-red-100 rounded border border-red-300 animate-pulse">
+                            <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                             </svg>
                             CRITICAL
@@ -485,43 +530,49 @@ export default function LaboratoryPortal() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(test.orderedDate).toLocaleDateString()}
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                      {new Date(test.orderedDate).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <Link
                           href={`/dashboard/laboratory/${test.id}`}
-                          className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm"
                         >
-                          <FileText className="h-4 w-4" />
+                          <FileText className="h-3.5 w-3.5" />
                           View
                         </Link>
+                        <Link
+                          href={`/dashboard/laboratory/history/${test.patient.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors shadow-sm"
+                          title="Patient history"
+                        >
+                          <Clock className="h-3.5 w-3.5" />
+                          History
+                        </Link>
                         {test.status === 'PENDING_CONFIRMATION' && (
-                          <>
-                            <span className="text-gray-300">|</span>
-                            <button
-                              onClick={() => confirmTest(test.id)}
-                              className="text-purple-600 hover:text-purple-900 flex items-center gap-1"
-                              title="Confirm test and generate bill"
-                            >
-                              <CheckCircle2 className="h-4 w-4" />
-                              Confirm
-                            </button>
-                          </>
+                          <button
+                            onClick={() => confirmTest(test.id)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors shadow-sm"
+                            title="Confirm test"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Confirm
+                          </button>
                         )}
                         {getNextStatus(test.status) && test.status !== 'PENDING_CONFIRMATION' && (
-                          <>
-                            <span className="text-gray-300">|</span>
-                            <button
-                              onClick={() => updateTestStatus(test.id, getNextStatus(test.status)!)}
-                              className="text-green-600 hover:text-green-900 flex items-center gap-1"
-                              title={`Move to ${getNextStatus(test.status)?.replace('_', ' ')}`}
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                              Next
-                            </button>
-                          </>
+                          <button
+                            onClick={() => updateTestStatus(test.id, getNextStatus(test.status)!)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors shadow-sm"
+                            title={`Move to ${getNextStatus(test.status)?.replace('_', ' ')}`}
+                          >
+                            <ArrowRight className="h-3.5 w-3.5" />
+                            Next
+                          </button>
                         )}
                       </div>
                     </td>

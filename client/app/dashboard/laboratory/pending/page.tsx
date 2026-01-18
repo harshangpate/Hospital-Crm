@@ -133,10 +133,10 @@ export default function PendingTestsPage() {
         
         // Calculate stats from the data
         setStats({
-          pendingConfirmation: data.statusCounts?.PENDING_CONFIRMATION || 0,
-          ordered: data.statusCounts?.ORDERED || 0,
-          sampleCollected: data.statusCounts?.SAMPLE_COLLECTED || 0,
-          inProgress: data.statusCounts?.IN_PROGRESS || 0,
+          pendingConfirmation: data.pendingConfirmation || 0,
+          ordered: data.orderedTests || 0,
+          sampleCollected: data.sampleCollectedTests || 0,
+          inProgress: data.inProgressTests || 0,
           urgent: 0 // We'll need to add urgent flag logic
         });
       }
