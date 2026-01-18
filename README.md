@@ -38,6 +38,24 @@
 
 **Hospital CRM** is a full-stack, enterprise-grade hospital management system designed to streamline healthcare operations. Built with modern web technologies, it offers a seamless experience for managing patients, appointments, medical records, billing, pharmacy, laboratory tests, and more.
 
+### 🆕 Latest Updates
+
+**January 2026 - Emergency Department Module**
+- ✨ ESI 5-level triage system with color-coded priorities
+- 🚑 Quick patient registration for walk-ins and ambulance arrivals
+- 📊 Real-time emergency queue board with waiting time tracking
+- 🏥 Emergency bed management with equipment tracking
+- 👨‍⚕️ Doctor assignment and comprehensive assessment workflow
+- 🔄 Complete disposition management (discharge, admit to IPD/ICU, transfer, LAMA)
+- 📈 ER dashboard with live statistics and critical alerts
+- 🔗 Seamless integration with IPD for emergency admissions
+
+**November 2025 - Surgery & OT Module**
+- Complete surgical workflow management
+- OT scheduling with conflict detection
+- Pre/Intra/Post-operative documentation
+- Surgical team management and billing
+
 ### Why This Project?
 
 - ✅ **Production-Ready**: Built with enterprise best practices
@@ -47,7 +65,8 @@
 - ✅ **Comprehensive**: 12+ modules covering all hospital operations
 - ✅ **Type-Safe**: Full TypeScript implementation
 - ✅ **Well-Documented**: Extensive documentation and API specs
-- ✅ **Recently Updated**: Complete Surgery & OT Module with advanced features (Nov 2025)
+- ✅ **Recently Updated**: Emergency Department Module with ESI Triage System (January 2026)
+- ✅ **Surgery & OT Module**: Complete surgical workflow management (November 2025)
 
 ---
 
@@ -111,6 +130,33 @@
 - Daily bed charges calculation (automated)
 - Transfer between wards/beds
 - Discharge summary generation
+- **Progress Notes**: SOAP format (Subjective, Objective, Assessment, Plan) documentation
+- Vital signs tracking with trend analysis
+- Medication Administration Record (MAR)
+
+### 🚨 **Emergency Department** ⭐ NEW (Jan 2026)
+- **Quick Registration**: Walk-in and ambulance patient registration with existing patient search
+- **ESI Triage System**: 5-level Emergency Severity Index (Level 1-5) with color coding
+  - Level 1 (Red): Resuscitation - Immediate life-saving intervention
+  - Level 2 (Orange): Emergent - High risk, potential threat to life
+  - Level 3 (Yellow): Urgent - Could deteriorate, requires multiple resources
+  - Level 4 (Green): Less Urgent - Stable, requires simple intervention
+  - Level 5 (Blue): Non-Urgent - Chronic problem, could use clinic/OPD
+- **Triage Assessment**: Comprehensive vital signs, ABC (Airway, Breathing, Circulation) check, risk factors
+- **Emergency Queue Board**: Real-time patient tracking with waiting time display
+- **Bed Management**: Emergency bay/room assignment with equipment tracking
+- **Doctor Assignment**: Auto-assignment with specialization matching
+- **Emergency Vitals**: GCS (Glasgow Coma Scale), repeated vital monitoring
+- **Doctor Assessment**: Full examination findings, diagnosis, treatment documentation
+- **Disposition Management**: 
+  - Discharge home with instructions
+  - Admit to IPD/ICU (automatic admission creation)
+  - Transfer to another facility
+  - LAMA (Left Against Medical Advice)
+  - Deceased/Brought Dead
+- **ER Dashboard**: Real-time metrics, patients by triage level, average waiting time, bed occupancy
+- **Complete ER Workflow**: Registration → Triage → Doctor Assessment → Treatment → Disposition
+- **15+ API Endpoints**: Full RESTful API for emergency operations
 
 ### 💰 **Billing & Invoicing**
 - Comprehensive invoice generation
@@ -247,7 +293,7 @@
 │                     Client (Next.js 16)                      │
 │  ┌──────────┬──────────┬──────────┬──────────┬──────────┐  │
 │  │   App    │  Pages   │Components│   API    │  Stores  │  │
-│  │  Router  │   62+    │   UI     │  Client  │ (Zustand)│  │
+│  │  Router  │   70+    │   UI     │  Client  │ (Zustand)│  │
 │  └──────────┴──────────┴──────────┴──────────┴──────────┘  │
 └────────────────────────┬────────────────────────────────────┘
                          │ HTTP/REST API
@@ -257,7 +303,8 @@
 │  ┌──────────┬──────────┬──────────┬──────────┬──────────┐  │
 │  │  Routes  │Controller│Middleware│ Services │ Utilities│  │
 │  │   API    │ Business │   Auth   │  Email   │   PDF    │  │
-│  │ Endpoints│  Logic   │   JWT    │  Cron    │  Crypto  │  │
+│  │Endpoints │  Logic   │   JWT    │  Cron    │  Crypto  │  │
+│  │  150+    │          │          │          │          │  │
 │  └──────────┴──────────┴──────────┴──────────┴──────────┘  │
 └────────────────────────┬────────────────────────────────────┘
                          │ Prisma ORM
@@ -265,10 +312,11 @@
 ┌────────────────────────┴────────────────────────────────────┐
 │                PostgreSQL Database                           │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  Tables: 40+ Models including User, Patient,        │   │
-│  │  Doctor, Appointment, MedicalRecord, Surgery,       │   │
-│  │  OperationTheater, LabTest, Invoice, Ward, Bed,     │   │
-│  │  Prescription, Medication, Notification, etc.       │   │
+│  │  Tables: 45+ Models including User, Patient,        │   │
+│  │  Doctor, Appointment, EmergencyVisit, Triage,       │   │
+│  │  Surgery, OperationTheater, LabTest, Invoice,       │   │
+│  │  Ward, Bed, Prescription, Medication,               │   │
+│  │  Notification, ProgressNote, etc.                   │   │
 │  └─────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -404,15 +452,17 @@ hospital-crm/
 │
 ├── 📂 client/                        # Next.js Frontend Application
 │   ├── 📂 app/                       # App Router (Next.js 16)
-│   │   ├── 📂 dashboard/             # Dashboard routes (62 pages)
+│   │   ├── 📂 dashboard/             # Dashboard routes (70+ pages)
 │   │   │   ├── 📂 admin/             # Admin pages
 │   │   │   ├── 📂 appointments/      # Appointment management
 │   │   │   ├── 📂 billing/           # Billing & invoicing
 │   │   │   ├── 📂 doctor/            # Doctor dashboard
+│   │   │   ├── 📂 emergency/         # Emergency Department ⭐ NEW
 │   │   │   ├── 📂 laboratory/        # Lab management
 │   │   │   ├── 📂 pharmacy/          # Pharmacy module
 │   │   │   ├── 📂 patients/          # Patient management
 │   │   │   ├── 📂 ipd/               # In-patient department
+│   │   │   ├── 📂 surgery/           # Surgery & OT module
 │   │   │   └── 📂 ...                # Other modules
 │   │   ├── 📄 layout.tsx             # Root layout with providers
 │   │   ├── 📄 page.tsx               # Landing page
@@ -431,6 +481,11 @@ hospital-crm/
 │   │   │   ├── ThemeToggle.tsx
 │   │   │   ├── Tooltip.tsx
 │   │   │   └── ...
+│   │   ├── 📂 surgery/               # Surgery module components
+│   │   │   ├── PreOpChecklist.tsx
+│   │   │   ├── IntraOpRecord.tsx
+│   │   │   ├── PostOpRecord.tsx
+│   │   │   └── SurgeryBilling.tsx
 │   │   ├── DashboardLayout.tsx       # Main dashboard layout
 │   │   └── ProtectedRoute.tsx        # Auth guard component
 │   │
@@ -438,8 +493,10 @@ hospital-crm/
 │   │   ├── 📂 api/                   # API client modules
 │   │   │   ├── appointments.ts
 │   │   │   ├── auth.ts
+│   │   │   ├── emergency.ts          # ⭐ NEW - Emergency API
 │   │   │   ├── notifications.ts
 │   │   │   ├── prescriptions.ts
+│   │   │   ├── surgery.ts
 │   │   │   └── users.ts
 │   │   ├── api-client.ts             # Axios instance
 │   │   ├── auth-store.ts             # Authentication store
@@ -455,23 +512,26 @@ hospital-crm/
 │
 ├── 📂 server/                        # Express.js Backend
 │   ├── 📂 prisma/                    # Database Schema & Migrations
-│   │   ├── 📄 schema.prisma          # Database schema
+│   │   ├── 📄 schema.prisma          # Database schema (45+ models)
 │   │   ├── 📂 migrations/            # Database migrations
-│   │   ├── 📄 schema.prisma          # Database schema
 │   │   └── 📄 create-superadmin.ts   # Admin creation script
 │   │
 │   ├── 📂 src/
-│   │   ├── 📂 controllers/           # Request Handlers
+│   │   ├── 📂 controllers/           # Request Handlers (20+ files)
 │   │   │   ├── auth.controller.ts
 │   │   │   ├── appointment.controller.ts
 │   │   │   ├── billing.controller.ts
+│   │   │   ├── emergency.controller.ts  # ⭐ NEW
 │   │   │   ├── labTest.controller.ts
 │   │   │   ├── pharmacy.controller.ts
+│   │   │   ├── surgery.controller.ts
 │   │   │   └── ...
 │   │   │
 │   │   ├── 📂 routes/                # API Routes
 │   │   │   ├── auth.routes.ts
 │   │   │   ├── appointment.routes.ts
+│   │   │   ├── emergency.routes.ts   # ⭐ NEW
+│   │   │   ├── surgery.routes.ts
 │   │   │   ├── user.routes.ts
 │   │   │   └── ...
 │   │   │
@@ -542,44 +602,65 @@ hospital-crm/
 - Doctor schedule management
 - Automated reminders
 
-### 3. **Patient Management**
+### 3. **Emergency Department** ⭐ NEW
+- Quick registration (existing/new patients)
+- ESI 5-level triage system
+- Emergency queue management
+- Bed/bay assignment
+- Doctor assessment workflow
+- Disposition management
+- Real-time ER dashboard
+
+### 4. **Patient Management**
 - Comprehensive patient profiles
 - Medical history tracking
 - Document management
 - Family linking
 
-### 4. **Laboratory System**
+### 5. **Laboratory System**
 - 50+ predefined tests
 - Sample tracking
 - Result management
 - Critical value alerts
 - PDF reports
+- Barcode tracking
+- Test history charts
 
-### 5. **Pharmacy Management**
+### 6. **Pharmacy Management**
 - Inventory tracking
 - Stock alerts
 - Prescription fulfillment
 - Batch management
 
-### 6. **IPD Management**
+### 7. **IPD Management**
 - Ward/bed allocation
 - Admission workflow
 - Daily charges
 - Discharge summary
+- SOAP progress notes
+- Vital signs tracking
 
-### 7. **Billing & Invoicing**
+### 8. **Surgery & OT Module**
+- OT scheduling with conflict detection
+- Pre/Intra/Post-operative records
+- Surgical team management
+- WHO safety checklist
+- Surgery billing
+- Analytics dashboard
+
+### 9. **Billing & Invoicing**
 - Invoice generation
 - Payment processing
 - Outstanding tracking
 - Financial reports
 
-### 8. **Medical Records**
+### 10. **Medical Records**
 - Electronic health records
 - Diagnosis tracking
 - Treatment plans
 - Prescription history
 
-### 9. **Notification System**
+### 11. **Notification System**
 - Real-time alerts
 - Email notifications
 - In-app notification center
@@ -636,6 +717,70 @@ All protected routes require Authorization header:
 ```
 Authorization: Bearer YOUR_JWT_TOKEN
 ```
+
+### Emergency Department Endpoints ⭐ NEW
+
+```http
+# Registration & Queue
+POST   /api/v1/emergency/register              # Register emergency visit
+GET    /api/v1/emergency/queue                 # Get emergency queue (with filters)
+GET    /api/v1/emergency/statistics            # Get ER dashboard statistics
+GET    /api/v1/emergency/:visitId              # Get visit details
+
+# Triage
+POST   /api/v1/emergency/:visitId/triage       # Create triage assessment
+GET    /api/v1/emergency/:visitId/triage       # Get triage details
+
+# Assignment
+POST   /api/v1/emergency/:visitId/assign-doctor  # Assign doctor to patient
+POST   /api/v1/emergency/:visitId/assign-bed     # Assign emergency bed
+
+# Assessment & Vitals
+PATCH  /api/v1/emergency/:visitId/assessment   # Update doctor assessment
+POST   /api/v1/emergency/:visitId/vitals       # Record vital signs
+GET    /api/v1/emergency/:visitId/vitals       # Get vitals history
+
+# Disposition
+POST   /api/v1/emergency/:visitId/disposition  # Complete disposition
+PATCH  /api/v1/emergency/:visitId/status       # Update visit status
+
+# Bed Management
+GET    /api/v1/emergency/beds/all              # Get all emergency beds
+```
+
+### Surgery & OT Endpoints
+
+```http
+# Surgery Management
+GET    /api/v1/surgeries                       # Get all surgeries (with filters)
+GET    /api/v1/surgeries/:id                   # Get surgery details
+POST   /api/v1/surgeries                       # Create surgery
+PATCH  /api/v1/surgeries/:id                   # Update surgery
+PATCH  /api/v1/surgeries/:id/status            # Update surgery status
+DELETE /api/v1/surgeries/:id                   # Delete surgery
+
+# Surgery Records
+GET    /api/v1/surgery-records/:surgeryId/pre-op     # Get pre-op checklist
+POST   /api/v1/surgery-records/:surgeryId/pre-op     # Create/update pre-op
+GET    /api/v1/surgery-records/:surgeryId/intra-op   # Get intra-op record
+POST   /api/v1/surgery-records/:surgeryId/intra-op   # Create/update intra-op
+GET    /api/v1/surgery-records/:surgeryId/post-op    # Get post-op record
+POST   /api/v1/surgery-records/:surgeryId/post-op    # Create/update post-op
+```
+
+### Additional Endpoints
+
+**Complete API documentation for all 150+ endpoints available in:**
+- Appointments
+- Patients
+- Laboratory
+- Pharmacy
+- IPD
+- Billing
+- Medical Records
+- Radiology
+- Staff Management
+- Notifications
 
 For complete API documentation, see [API_TESTING.md](API_TESTING.md)
 
@@ -822,7 +967,31 @@ For support, please:
 
 ## 🗺️ Roadmap
 
+### Recently Completed ✅
+- [x] **Emergency Department Module** (January 2026)
+  - ESI 5-level triage system
+  - Complete ER workflow (Registration → Triage → Assessment → Disposition)
+  - Emergency queue board with real-time metrics
+  - Bed management and vital signs tracking
+- [x] **Surgery & OT Module** (November 2025)
+  - OT scheduling and management
+  - Pre/Intra/Post-operative records
+  - Surgical team and billing
+- [x] **IPD Progress Notes** (November 2025)
+  - SOAP format documentation
+  - Dark mode support
+
 ### Version 2.0 (Upcoming)
+- [ ] Complete Emergency Department UI
+  - [ ] Triage Assessment page
+  - [ ] Emergency Queue Board
+  - [ ] Doctor Assessment page
+  - [ ] Disposition Management page
+  - [ ] Emergency Dashboard
+- [ ] IPD Enhancements
+  - [ ] Vital Signs Tracking with charts
+  - [ ] Medication Administration Record (MAR)
+  - [ ] Discharge Summary Generation
 - [ ] Mobile app (React Native)
 - [ ] Telemedicine integration
 - [ ] AI-powered diagnosis assistance
