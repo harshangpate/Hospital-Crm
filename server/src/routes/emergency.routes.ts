@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import {
   registerEmergencyVisit,
   createTriageAssessment,
@@ -20,7 +20,7 @@ import {
 const router = express.Router();
 
 // All routes require authentication
-router.use(authenticateToken);
+router.use(authenticate);
 
 // Registration
 router.post('/register', registerEmergencyVisit);

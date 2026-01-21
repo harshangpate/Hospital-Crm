@@ -78,7 +78,7 @@ export default function OTDashboardPage() {
     }
   };
 
-  const handleStatusChange = async (otId: number, newStatus: string) => {
+  const handleStatusChange = async (otId: string, newStatus: string) => {
     try {
       await updateOTStatus(otId.toString(), newStatus);
       fetchData(); // Refresh data

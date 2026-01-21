@@ -49,6 +49,7 @@ interface Surgery {
     };
   };
   operationTheater: {
+    id: string;
     name: string;
     otNumber: string;
   };

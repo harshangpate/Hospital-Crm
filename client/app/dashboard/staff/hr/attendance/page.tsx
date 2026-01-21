@@ -198,7 +198,7 @@ export default function AttendancePage() {
       setMarkingAttendance(true);
       
       // Check if marking present and determine if late based on current time
-      let finalStatus = status;
+      let finalStatus: string = status;
       const now = new Date();
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
@@ -207,7 +207,7 @@ export default function AttendancePage() {
       if (status === 'PRESENT') {
         // If marking present after 10 AM, mark as LATE
         if (currentHour > reportingTime || (currentHour === reportingTime && currentMinute > 0)) {
-          finalStatus = 'LATE' as any;
+          finalStatus = 'LATE';
           toast.info('Marked as LATE (after 10 AM reporting time)');
         }
       }

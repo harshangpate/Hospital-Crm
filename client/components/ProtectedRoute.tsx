@@ -7,11 +7,15 @@ import { useAuthStore } from '@/lib/auth-store';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
+  requiredRole?: string[];
 }
 
-export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, allowedRoles, requiredRole }: ProtectedRouteProps) {
   const router = useRouter();
   const { token, user, isLoading } = useAuthStore();
+
+  // Support both allowedRoles and requiredRole props
+  const roles = requiredRole || allowedRoles;
 
   useEffect(() => {
     // If not loading and no token, redirect to login
@@ -21,13 +25,13 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     }
 
     // If roles are specified and user doesn't have permission
-    if (!isLoading && user && allowedRoles && allowedRoles.length > 0) {
-      if (!allowedRoles.includes(user.role)) {
+    if (!isLoading && user && roles && roles.length > 0) {
+      if (!roles.includes(user.role)) {
         // Redirect to their appropriate dashboard
         router.push(getDashboardRoute(user.role));
       }
     }
-  }, [token, user, isLoading, allowedRoles, router]);
+  }, [token, user, isLoading, roles, router]);
 
   // Show loading state while checking auth
   if (isLoading) {

@@ -46,6 +46,7 @@ export const registerEmergencyVisit = async (req: Request, res: Response) => {
           lastName: validatedData.lastName,
           email: validatedData.email || `${generatedPatientId.toLowerCase()}@emergency.temp`,
           phone: validatedData.phone || '',
+          password: 'emergency-temp-password',
           role: 'PATIENT',
           dateOfBirth: validatedData.dateOfBirth ? new Date(validatedData.dateOfBirth) : undefined,
           gender: validatedData.gender || 'OTHER',

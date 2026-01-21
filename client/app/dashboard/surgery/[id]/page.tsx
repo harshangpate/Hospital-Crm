@@ -63,7 +63,9 @@ export default function SurgeryDetailsPage() {
 
     try {
       setUpdatingStatus(true);
-      await updateSurgeryStatus(surgeryId, { status: newStatus });
+      await updateSurgeryStatus(surgeryId, { 
+        status: newStatus as 'SCHEDULED' | 'PRE_OP' | 'IN_PROGRESS' | 'POST_OP' | 'COMPLETED' | 'CANCELLED' | 'POSTPONED'
+      });
       await fetchSurgeryDetails(); // Refresh data
       alert(`Surgery status updated to ${newStatus.replace('_', ' ')}`);
     } catch (error: any) {
