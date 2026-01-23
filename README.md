@@ -290,35 +290,35 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Client (Next.js 16)                      │
-│  ┌──────────┬──────────┬──────────┬──────────┬──────────┐  │
-│  │   App    │  Pages   │Components│   API    │  Stores  │  │
-│  │  Router  │   70+    │   UI     │  Client  │ (Zustand)│  │
-│  └──────────┴──────────┴──────────┴──────────┴──────────┘  │
+│                     Client (Next.js 16)                     │
+│  ┌──────────┬──────────┬──────────┬──────────┬──────────┐   │
+│  │   App    │  Pages   │Components│   API    │  Stores  │   │
+│  │  Router  │   70+    │   UI     │  Client  │ (Zustand)│   │
+│  └──────────┴──────────┴──────────┴──────────┴──────────┘   │
 └────────────────────────┬────────────────────────────────────┘
                          │ HTTP/REST API
                          │ (Axios)
 ┌────────────────────────┴────────────────────────────────────┐
-│                   Server (Express.js)                        │
-│  ┌──────────┬──────────┬──────────┬──────────┬──────────┐  │
-│  │  Routes  │Controller│Middleware│ Services │ Utilities│  │
-│  │   API    │ Business │   Auth   │  Email   │   PDF    │  │
-│  │Endpoints │  Logic   │   JWT    │  Cron    │  Crypto  │  │
-│  │  150+    │          │          │          │          │  │
-│  └──────────┴──────────┴──────────┴──────────┴──────────┘  │
+│                   Server (Express.js)                       │
+│  ┌──────────┬──────────┬──────────┬──────────┬──────────┐   │
+│  │  Routes  │Controller│Middleware│ Services │ Utilities│   │
+│  │   API    │ Business │   Auth   │  Email   │   PDF    │   │
+│  │Endpoints │  Logic   │   JWT    │  Cron    │  Crypto  │   │
+│  │  150+    │          │          │          │          │   │
+│  └──────────┴──────────┴──────────┴──────────┴──────────┘   │
 └────────────────────────┬────────────────────────────────────┘
                          │ Prisma ORM
                          │
 ┌────────────────────────┴────────────────────────────────────┐
-│                PostgreSQL Database                           │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  Tables: 45+ Models including User, Patient,        │   │
-│  │  Doctor, Appointment, EmergencyVisit, Triage,       │   │
-│  │  Surgery, OperationTheater, LabTest, Invoice,       │   │
-│  │  Ward, Bed, Prescription, Medication,               │   │
-│  │  Notification, ProgressNote, etc.                   │   │
-│  └─────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────┘
+│                PostgreSQL Database                          │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  Tables: 45+ Models including User, Patient,        │    │
+│  │  Doctor, Appointment, EmergencyVisit, Triage,       │    │
+│  │  Surgery, OperationTheater, LabTest, Invoice,       │    │
+│  │  Ward, Bed, Prescription, Medication,               │    │
+│  │  Notification, ProgressNote, etc.                   │    │
+│  └─────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
