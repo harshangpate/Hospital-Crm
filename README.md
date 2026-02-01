@@ -982,12 +982,13 @@ For support, please:
   - Dark mode support
 
 ### Version 2.0 (Upcoming)
-- [ ] Complete Emergency Department UI
-  - [ ] Triage Assessment page
-  - [ ] Emergency Queue Board
-  - [ ] Doctor Assessment page
-  - [ ] Disposition Management page
-  - [ ] Emergency Dashboard
+- [x] Complete Emergency Department UI (January 2026)
+  - [x] Triage Assessment page
+  - [x] Emergency Queue Board
+  - [x] Doctor Assessment page
+  - [x] Disposition Management page
+  - [x] Emergency Dashboard
+  - [x] Emergency Staff Role added
 - [ ] IPD Enhancements
   - [ ] Vital Signs Tracking with charts
   - [ ] Medication Administration Record (MAR)

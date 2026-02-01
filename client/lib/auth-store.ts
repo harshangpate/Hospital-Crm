@@ -28,7 +28,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
@@ -59,7 +59,9 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       onRehydrateStorage: () => (state) => {
         // Set loading to false after rehydration
-        state?.setLoading(false);
+        if (state) {
+          state.setLoading(false);
+        }
       },
     }
   )

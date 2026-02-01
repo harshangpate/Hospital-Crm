@@ -10,6 +10,7 @@ import { UserPlus, ArrowLeft, Loader2 } from 'lucide-react';
 const USER_ROLES = [
   { value: 'DOCTOR', label: 'Doctor', requiresExtra: true },
   { value: 'NURSE', label: 'Nurse', requiresExtra: false },
+  { value: 'EMERGENCY_STAFF', label: 'Emergency Staff', requiresExtra: false },
   { value: 'RECEPTIONIST', label: 'Receptionist', requiresExtra: false },
   { value: 'PHARMACIST', label: 'Pharmacist', requiresExtra: false },
   { value: 'LAB_TECHNICIAN', label: 'Lab Technician', requiresExtra: false },

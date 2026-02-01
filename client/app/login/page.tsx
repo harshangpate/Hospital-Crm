@@ -23,6 +23,31 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+// Helper function to get dashboard route based on role
+function getDashboardRoute(role: string): string {
+  switch (role) {
+    case 'PATIENT':
+      return '/dashboard/patient';
+    case 'DOCTOR':
+      return '/dashboard/doctor';
+    case 'LAB_TECHNICIAN':
+      return '/dashboard/laboratory';
+    case 'PHARMACIST':
+      return '/dashboard/pharmacy';
+    case 'NURSE':
+      return '/dashboard/staff';
+    case 'RECEPTIONIST':
+      return '/dashboard/reception';
+    case 'EMERGENCY_STAFF':
+      return '/dashboard/emergency';
+    case 'ADMIN':
+    case 'SUPER_ADMIN':
+      return '/dashboard/admin';
+    default:
+      return '/dashboard';
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
@@ -71,9 +96,16 @@ export default function LoginPage() {
           setTempToken(response.tempToken);
           toast.info('Please enter your 2FA code');
         } else if (response.data && response.data.user) {
+          // Set auth first
           setAuth(response.data.user, response.data.token);
           toast.success('Login successful!');
-          router.push('/dashboard');
+          
+          // Use setTimeout to ensure state is persisted before navigation
+          setTimeout(() => {
+            // Determine dashboard route based on role
+            const dashboardRoute = getDashboardRoute(response.data.user.role);
+            router.push(dashboardRoute);
+          }, 100);
         }
       }
     } catch (error: any) {
@@ -110,7 +142,12 @@ export default function LoginPage() {
       if (data.success && data.data && data.data.user) {
         setAuth(data.data.user, data.data.token);
         toast.success('Login successful!');
-        router.push('/dashboard');
+        
+        // Use setTimeout to ensure state is persisted before navigation
+        setTimeout(() => {
+          const dashboardRoute = getDashboardRoute(data.data.user.role);
+          router.push(dashboardRoute);
+        }, 100);
       } else {
         toast.error(data.message || 'Invalid 2FA code');
       }

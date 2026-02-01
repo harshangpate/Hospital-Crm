@@ -206,6 +206,33 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
+    icon: AlertTriangle,
+    label: 'Emergency',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'DOCTOR', 'NURSE', 'EMERGENCY_STAFF'],
+    submenu: [
+      {
+        label: 'ER Dashboard',
+        href: '/dashboard/emergency',
+        icon: Home,
+      },
+      {
+        label: 'Register Patient',
+        href: '/dashboard/emergency/register',
+        icon: UserPlus,
+      },
+      {
+        label: 'ER Queue',
+        href: '/dashboard/emergency/queue',
+        icon: List,
+      },
+      {
+        label: 'Bed Status',
+        href: '/dashboard/emergency/beds',
+        icon: Bed,
+      },
+    ],
+  },
+  {
     icon: Briefcase,
     label: 'Pharmacy',
     roles: ['PHARMACIST', 'ADMIN', 'SUPER_ADMIN'],
